@@ -7,10 +7,12 @@ class CommonRequiredText extends StatelessWidget {
     Key? key,
     required this.width,
     required this.text,
+    this.isRequried = true,
   }) : super(key: key);
 
   final double width;
   final String text;
+  final bool isRequried;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class CommonRequiredText extends StatelessWidget {
         ),
         children: [
           TextSpan(
-            text: "*",
+            text: isRequried == true ? "*" : "",
             style: TextStyleConst.mediumTextStyle(
               ColorConst.redColor,
               width * 0.045,

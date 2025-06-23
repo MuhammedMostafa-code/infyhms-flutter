@@ -190,12 +190,6 @@ class AppointmentScreen extends StatelessWidget {
                                                           doctorFilterAppointmentController.doctorAppointmentModel!.data![index].patient_image!),
                                                     ),
                                                   ),
-                                                  // child: CachedNetworkImage(
-                                                  //   imageUrl:
-                                                  //       appointmentModel!.data![index].doctor_image_url!,
-                                                  //   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                                  //   errorWidget: (context, url, error) => const Icon(Icons.error),
-                                                  // ),
                                                 ),
                                               ),
                                             )
@@ -238,12 +232,6 @@ class AppointmentScreen extends StatelessWidget {
                                                         doctorFilterAppointmentController.doctorAppointmentModel!.data![index].patient_image!),
                                                   ),
                                                 ),
-                                                // child: CachedNetworkImage(
-                                                //   imageUrl:
-                                                //       appointmentModel!.data![index].doctor_image_url!,
-                                                //   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                                //   errorWidget: (context, url, error) => const Icon(Icons.error),
-                                                // ),
                                               ),
                                             ),
                                       SizedBox(height: height * 0.01),
@@ -371,7 +359,6 @@ class AppointmentScreen extends StatelessWidget {
                                                     backgroundColor: ColorConst.borderGreyColor,
                                                     foregroundColor: ColorConst.blackColor,
                                                     label: StringUtils.cancel,
-                                                    // lableColor: ColorConst.hintGreyColor,
                                                   ),
                                                 ],
                                               ),
@@ -467,7 +454,6 @@ class AppointmentScreen extends StatelessWidget {
                                                     backgroundColor: const Color(0xFFFCE5E5),
                                                     foregroundColor: ColorConst.redColor,
                                                     label: StringUtils.delete,
-                                                    // lableColor: ColorConst.redColor,
                                                   ),
                                                 ],
                                               ),
@@ -517,12 +503,6 @@ class AppointmentScreen extends StatelessWidget {
                                                           filterAppointmentController.filterAppointmentModel!.data![index].doctor_image_url!),
                                                     ),
                                                   ),
-                                                  // child: CachedNetworkImage(
-                                                  //   imageUrl:
-                                                  //       appointmentModel!.data![index].doctor_image_url!,
-                                                  //   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                                  //   errorWidget: (context, url, error) => const Icon(Icons.error),
-                                                  // ),
                                                 ),
                                               ),
                                             )
@@ -618,7 +598,6 @@ class AppointmentScreen extends StatelessWidget {
                                                     backgroundColor: const Color(0xFFFCE5E5),
                                                     foregroundColor: ColorConst.redColor,
                                                     label: StringUtils.delete,
-                                                    // lableColor: Colors.red,
                                                   ),
                                                 ],
                                               ),
@@ -668,12 +647,6 @@ class AppointmentScreen extends StatelessWidget {
                                                           filterAppointmentController.filterAppointmentModel!.data![index].doctor_image_url!),
                                                     ),
                                                   ),
-                                                  // child: CachedNetworkImage(
-                                                  //   imageUrl:
-                                                  //       appointmentModel!.data![index].doctor_image_url!,
-                                                  //   placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
-                                                  //   errorWidget: (context, url, error) => const Icon(Icons.error),
-                                                  // ),
                                                 ),
                                               ),
                                             ),

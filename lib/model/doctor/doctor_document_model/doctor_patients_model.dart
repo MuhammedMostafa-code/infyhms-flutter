@@ -24,10 +24,12 @@ class DoctorPatientsDocumentsModel {
 class PatientData {
   int? id;
   String? patient_name;
+  int? user_id;
 
   PatientData({
     this.id,
     this.patient_name,
+    this.user_id,
   });
 
   factory PatientData.fromJson(Map<String, dynamic> json) => _$PatientDataFromJson(json);

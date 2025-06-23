@@ -23,7 +23,7 @@ class CheckSocketException {
       Get.rawSnackbar(
         backgroundColor: const Color(0xff2d2d2d),
         messageText: Text(
-          showError ?? error.response?.data["message"] ?? error.message,
+          showError ?? 'error.response?.data["message"]' ,
           style: TextStyleConst.mediumTextStyle(Colors.white, 15),
         ),
         borderRadius: 5,

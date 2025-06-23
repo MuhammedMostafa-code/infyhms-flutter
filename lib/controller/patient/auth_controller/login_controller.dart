@@ -46,6 +46,7 @@ class LogInController extends GetxController {
             PreferenceUtils.setStringValue("patientId", "${loginModel!.data!.user!.id}");
             PreferenceUtils.setBoolValue("isDoctor", loginModel!.data!.is_doctor!);
             Get.to(() => const HomeScreen());
+            print('${loginModel!.data!.token!}==================================================================================================');
           } else {
             CommonError().showMaterialBanner(context, "${value.message}");
           }

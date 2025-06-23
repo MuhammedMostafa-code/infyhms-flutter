@@ -55,6 +55,12 @@ class StringUtils {
   static const myAdmissions = "My Admissions";
   static const prescriptions = "Prescriptions";
   static const vaccinatedPatients = "Vaccination";
+  static const visits = "Visits";
+  static const patients = "Patients";
+  static const ashe3a = "Medical x-rays";
+  static const t7aleel = "Medical tests";
+  static const NewT7aleel = "New Medical tests";
+  static const addpatients = "Addpatients";
   static const logOut = "Logout";
   static const myAccount = "My Account";
   static const editProfile = "Edit Profile";
@@ -122,6 +128,10 @@ class StringUtils {
 
   ///document
   static const title = "Title:";
+  static const reportDoc = "Report:";
+  static const conclusion = "Conclusion:";
+  static const labName = "LabName:";
+  static const details = "Details:";
   static const documentType = "Document Type:";
   static const attachment = "Attachment:";
   static const note = "Notes:";
@@ -193,7 +203,7 @@ class StringUtils {
 
   /// report
 
-  static const report = "Report";
+  static const reportDate = "ReportDate";
   static const birthReport = "Birth Reports";
   static const deathReport = "Death Reports";
   static const investigationReport = "Investigation Reports";

@@ -13,7 +13,9 @@ class _ApiClient implements ApiClient {
     this._dio, {
     this.baseUrl,
   }) {
-    baseUrl ??= 'https://hms-staging.infyom.com/api/';
+    // baseUrl ??= 'https://upd.mdibridge.com/api/';
+    baseUrl ??= 'https://local.mdiprove.com/api/';
+    // baseUrl ??= 'https://live.mdiprove.com/api/';
   }
 
   final Dio _dio;
@@ -248,6 +250,7 @@ class _ApiClient implements ApiClient {
     return value;
   }
 
+
   @override
   Future<DocumentsModel> getDocuments(String? token) async {
     final _extra = <String, dynamic>{};
@@ -274,6 +277,64 @@ class _ApiClient implements ApiClient {
               baseUrl,
             ))));
     final value = DocumentsModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<DocumentsSubTypeModel> getDocumentsSubType(String? token, String? documentTypeId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<DocumentsSubTypeModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+      _dio.options,
+      'get-doc-subtypes/${documentTypeId}',
+      queryParameters: queryParameters,
+      data: _data,
+    )
+        .copyWith(
+        baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        ))));
+    final value = DocumentsSubTypeModel.fromjson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<DocumentsSpecificTypeModel> getDocumentsSpecificType(String? token, String? documentTypeId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<DocumentsSpecificTypeModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+      _dio.options,
+      'get-doc-specific-types/${documentTypeId}',
+      queryParameters: queryParameters,
+      data: _data,
+    )
+        .copyWith(
+        baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        ))));
+    final value = DocumentsSpecificTypeModel.fromjson(_result.data!);
     return value;
   }
 
@@ -307,13 +368,72 @@ class _ApiClient implements ApiClient {
   }
 
   @override
+  Future<LabtestsModel> getLabTests(String? token) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<LabtestsModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+      _dio.options,
+      'get-lab-tests',
+      queryParameters: queryParameters,
+      data: _data,
+    )
+        .copyWith(
+        baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        ))));
+    final value = LabtestsModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
+  Future<GetDocumentParentsModel> getDocumentParents(String? token, String? documentSpecificTypeId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{r'Authorization': token};
+    _headers.removeWhere((k, v) => v == null);
+    const Map<String, dynamic>? _data = null;
+    final _result = await _dio
+        .fetch<Map<String, dynamic>>(_setStreamType<GetDocumentParentsModel>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+      _dio.options,
+      'get-document-parents/${documentSpecificTypeId}',
+      queryParameters: queryParameters,
+      data: _data,
+    )
+        .copyWith(
+        baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        ))));
+    final value = GetDocumentParentsModel.fromJson(_result.data!);
+    return value;
+  }
+
+  @override
   Future<DocumentStoreModel> storeDocument(
     String? token,
     String title,
     String documentTypeId,
     String notes,
     File file,
-  ) async {
+  ) async
+  {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     queryParameters.removeWhere((k, v) => v == null);
@@ -2509,7 +2629,8 @@ class _ApiClient implements ApiClient {
     )
             .compose(
               _dio.options,
-              'doctors/doctor-document-type',
+              // 'doctors/doctor-document-type',
+              'document-type',
               queryParameters: queryParameters,
               data: _data,
             )
@@ -2539,7 +2660,8 @@ class _ApiClient implements ApiClient {
     )
             .compose(
               _dio.options,
-              'doctors/doctor-patients',
+              'patients',
+              // doctors/doctor-patients
               queryParameters: queryParameters,
               data: _data,
             )
@@ -2556,6 +2678,7 @@ class _ApiClient implements ApiClient {
   Future<DoctorDocumentsCRUDModel> createNewDoctorDocument(
     String? token,
     String title,
+    String details,
     String documentTypeId,
     String patientId,
     File? attachment,
@@ -2570,6 +2693,10 @@ class _ApiClient implements ApiClient {
     _data.fields.add(MapEntry(
       'title',
       title,
+    ));
+    _data.fields.add(MapEntry(
+      'details',
+      details,
     ));
     _data.fields.add(MapEntry(
       'document_type_id',
@@ -2601,7 +2728,8 @@ class _ApiClient implements ApiClient {
     )
             .compose(
               _dio.options,
-              'doctors/doctor-document-store',
+              'documents/store',
+              // 'doctors/doctor-document-store',
               queryParameters: queryParameters,
               data: _data,
             )

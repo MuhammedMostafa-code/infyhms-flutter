@@ -19,26 +19,9 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    // handleDynamicLinks();
   }
 
   final SplashController splashController = Get.put(SplashController());
-
-  // Future handleDynamicLinks() async {
-  //   final PendingDynamicLinkData? data = await FirebaseDynamicLinks.instance.getInitialLink();
-  //   _handleDeepLink(data);
-  //   FirebaseDynamicLinks.instance.onLink.listen((event) {
-  //     _handleDeepLink(event);
-  //   });
-  // }
-  //
-  // void _handleDeepLink(PendingDynamicLinkData? data) {
-  //   final Uri? deepLink = data?.link;
-  //   if (deepLink != null) {
-  //     StringUtils.token = deepLink.toString().split("/").last;
-  //     Get.to(() => ResetPasswordScreen());
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {

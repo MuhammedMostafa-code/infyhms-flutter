@@ -20,6 +20,14 @@ class ListUtils {
       "title": StringUtils.documents,
     },
     {
+      "icon": ImageUtils.ashe3aIcon,
+      "title": StringUtils.ashe3a,
+    },
+    {
+      "icon": ImageUtils.t7aleelIcon,
+      "title": StringUtils.t7aleel,
+    },
+    {
       "icon": ImageUtils.noticeIcon,
       "title": StringUtils.noticeBoards,
     },
@@ -46,6 +54,18 @@ class ListUtils {
     {
       "icon": ImageUtils.vaccinatedIcon,
       "title": StringUtils.vaccinatedPatients,
+    },
+    {
+      "icon": ImageUtils.visits,
+      "title": StringUtils.visits,
+    },
+    {
+      "icon": ImageUtils.patients,
+      "title": StringUtils.patients,
+    },
+    {
+      "icon": ImageUtils.addpatients,
+      "title": StringUtils.addpatients,
     },
   ];
   static List<Map<String, dynamic>> doctorDrawerList = [
@@ -78,6 +98,14 @@ class ListUtils {
       "title": StringUtils.documents,
     },
     {
+      "icon": ImageUtils.t7aleelIcon,
+      "title": StringUtils.t7aleel,
+    },
+    {
+      "icon": ImageUtils.ashe3aIcon,
+      "title": StringUtils.ashe3a,
+    },
+    {
       "icon": ImageUtils.diagnosisTestIcon,
       "title": StringUtils.diagnosisTests,
     },
@@ -100,6 +128,18 @@ class ListUtils {
     {
       "icon": ImageUtils.reportsIcon,
       "title": StringUtils.reports,
+    },
+    {
+      "icon": ImageUtils.visits,
+      "title": StringUtils.visits,
+    },
+    {
+      "icon": ImageUtils.patients,
+      "title": StringUtils.patients,
+    },
+    {
+      "icon": ImageUtils.addpatients,
+      "title": StringUtils.addpatients,
     },
   ];
 }

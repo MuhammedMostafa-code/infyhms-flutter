@@ -69,19 +69,27 @@ import 'package:infyhms_flutter/model/patient/documents_model/documents_model/do
 import 'package:infyhms_flutter/model/patient/documents_model/documents_type_model/documents_type.dart';
 import 'package:infyhms_flutter/model/patient/invoice_model/invoice_details_model.dart';
 import 'package:infyhms_flutter/model/patient/invoice_model/invoice_model.dart';
+import 'package:infyhms_flutter/model/patient/lab_tests/gat_lab_tests.dart';
 import 'package:infyhms_flutter/model/patient/live_consultancy/live_consultation_details_model.dart';
 import 'package:infyhms_flutter/model/patient/live_consultancy/live_consultation_filter.dart';
 import 'package:infyhms_flutter/model/patient/live_consultancy/live_consultation_meeting_model.dart';
 import 'package:infyhms_flutter/model/patient/notice_board_model/notice_board.dart';
 import 'package:infyhms_flutter/model/patient/prescriptions_model/prescription_details_model.dart';
 import 'package:infyhms_flutter/model/patient/prescriptions_model/prescriptions_model.dart';
+import 'package:infyhms_flutter/model/patient/t7aleel/t7aleel_model/t7aleel_model.dart';
 import 'package:infyhms_flutter/model/patient/vaccinated_model/vaccinated_model.dart';
 import 'package:infyhms_flutter/utils/string_utils.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../model/patient/documents_model/document-parents/get-document-parents.dart';
+import '../model/patient/documents_model/document_specific-type/document_specifc-type.dart';
+import '../model/patient/documents_model/document_sub-type-model/documents_sub-type.dart';
+
 part 'api_request.g.dart';
 
-@RestApi(baseUrl: "https://hms-staging.infyom.com/api/")
+// @RestApi(baseUrl: "https://upd.mdibridge.com/api/")
+@RestApi(baseUrl: "https://local.mdiprove.com/api/")
+// @RestApi(baseUrl: "https://live.mdiprove.com/api/")
 abstract class ApiClient {
   factory ApiClient(Dio dio, {String baseUrl}) = _ApiClient;
 
@@ -127,6 +135,7 @@ abstract class ApiClient {
     @Field("patient_id") String patientId,
   );
 
+
   @GET("documents")
   Future<DocumentsModel> getDocuments(
     @Header('Authorization') String? token,
@@ -136,6 +145,36 @@ abstract class ApiClient {
   Future<DocumentsTypeModel> getDocumentsType(
     @Header('Authorization') String? token,
   );
+
+  @GET("get-doc-subtypes/{documentTypeId}")
+  Future<DocumentsSubTypeModel> getDocumentsSubType(
+      @Header('Authorization') String? token,
+      @Path("id") String? documentTypeId,
+      );
+
+  @GET("get-doc-specific-types/{documentTypeId}")
+  Future<DocumentsSpecificTypeModel> getDocumentsSpecificType(
+      @Header('Authorization') String? token,
+      @Path("id") String? documentTypeId,
+      );
+
+  @GET("get-lab-tests")
+  Future<LabtestsModel> getLabTests(
+      @Header('Authorization') String? token,
+      );
+
+  @GET("get-document-parents/{documentTypeId}")
+  Future<GetDocumentParentsModel> getDocumentParents(
+      @Header('Authorization') String? token,
+      @Path("id") String? documentSpecificTypeId,
+      );
+
+
+  // @GET("get-doc-specific-types/{documentSubtypeId?}")
+  // Future<DocumentsSpecificTypeModel> getDocumentsSpecificType(
+  //     @Header('Authorization') String? token,
+  //     @Path("id") int documentSubtypeId,
+  //     );
 
   @MultiPart()
   @POST("document-store")
@@ -553,12 +592,14 @@ abstract class ApiClient {
     @Header('Authorization') String? token,
   );
 
-  @GET("doctors/doctor-document-type")
+  // @GET("doctors/doctor-document-type")
+  @GET("document-type")
   Future<DoctorDocumentsTypeModel> doctorDocumentType(
     @Header('Authorization') String? token,
   );
 
-  @GET("doctors/doctor-patients")
+  // @GET("doctors/doctor-patients")
+  @GET("patients")
   Future<DoctorPatientsDocumentsModel> doctorPatientsDocument(
     @Header('Authorization') String? token,
   );
@@ -566,10 +607,12 @@ abstract class ApiClient {
   /// doctor documents crud
 
   @MultiPart()
-  @POST("doctors/doctor-document-store")
+  @POST("documents/store")
+  // @POST("doctors/doctor-document-store")
   Future<DoctorDocumentsCRUDModel> createNewDoctorDocument(
     @Header('Authorization') String? token,
     @Part(name: "title") String title,
+    @Part(name: "details") String details,
     @Part(name: "document_type_id") String documentTypeId,
     @Part(name: "patient_id") String patientId,
     @Part(name: "file") File? attachment,

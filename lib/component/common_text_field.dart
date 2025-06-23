@@ -10,22 +10,25 @@ class CommonTextField extends StatelessWidget {
   final TextEditingController controller;
   final int? maxLine;
   final int? minLine;
-  final TextInputType? keyBoardType;
+  final TextInputType? keyBoardType ;
   final bool readOnly;
+  final bool isFilled;
   final bool? obscureText;
-
+  final void Function(String)? onchange ;
   const CommonTextField({
     Key? key,
-    this.maxLine,
+    this.maxLine = 1,
     this.readOnly = false,
+    this.isFilled = false,
     this.minLine,
-    this.keyBoardType,
+    this.keyBoardType = TextInputType.multiline,
     this.hintText,
     required this.validator,
     this.suffixIcon,
     required this.controller,
     this.onTap,
     this.obscureText,
+    this.onchange
   }) : super(key: key);
 
   @override
@@ -44,7 +47,9 @@ class CommonTextField extends StatelessWidget {
       onTap: onTap,
       controller: controller,
       validator: validator,
+      onChanged: onchange,
       decoration: InputDecoration(
+        filled: isFilled,
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(color: ColorConst.borderGreyColor, width: 1.5),
           borderRadius: BorderRadius.circular(10),
@@ -70,7 +75,8 @@ class CommonTextField extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
         ),
         hintText: hintText,
-        hintStyle: TextStyleConst.hintTextStyle(ColorConst.hintGreyColor),
+        hintStyle: TextStyleConst.hintTextStyle(ColorConst.hintGreyColor)
+            .copyWith(fontStyle: FontStyle.italic),
         suffixIcon: suffixIcon,
       ),
     );

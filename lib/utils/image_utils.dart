@@ -18,6 +18,11 @@ class ImageUtils {
   static const patientAdmissionIcon = "assets/icon/patientAdmission.png";
   static const prescriptionIcon = "assets/icon/prescription.png";
   static const vaccinatedIcon = "assets/icon/vaccinated.png";
+  static const visits = "assets/icon/visits.png";
+  static const patients = "assets/icon/patient.png";
+  static const ashe3aIcon = "assets/icon/ct-scan.png";
+  static const t7aleelIcon = "assets/icon/blood-test.png";
+  static const addpatients = "assets/icon/add.png";
   static const logOutIcon = "assets/icon/logout.png";
   static const downloadIcon = "assets/icon/downloadIcon.png";
   static const videoIcon = "assets/icon/videoIcon.png";

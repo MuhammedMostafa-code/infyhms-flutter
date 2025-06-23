@@ -19,6 +19,7 @@ import 'package:infyhms_flutter/model/patient/documents_model/documents_model/do
 import 'package:infyhms_flutter/utils/image_utils.dart';
 import 'package:infyhms_flutter/utils/preference_utils.dart';
 import 'package:infyhms_flutter/utils/string_utils.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DocumentController extends GetxController {
@@ -93,6 +94,52 @@ class DocumentController extends GetxController {
         }
       }
     }
+  }
+
+  void showDocumentWithZoom(context, int index) async {
+    String url;
+    if (PreferenceUtils.getBoolValue("isDoctor")) {
+      url = doctorDocumentsModel?.data?[index].document_url ?? "";
+    } else {
+      url = documentsModel?.data?[index].document_url ?? "";
+    }
+
+    if (url.isEmpty) {
+      DisplaySnackBar.displaySnackBar("No document URL found", 3, ColorConst.redColor);
+      return;
+    }
+
+    // تعريف PhotoViewController للتحكم في الزووم
+    PhotoViewController photoViewController = PhotoViewController();
+
+    // عرض الصورة باستخدام PhotoView داخل Container مع حجم محدد
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Document Preview"),
+          content: Container(
+            width: 800, // يعين العرض ليكون 100% من عرض الشاشة
+            height: 400, // يمكنك تعديل هذا بناءً على متطلباتك
+            child: PhotoView(
+              controller: photoViewController, // تعيين PhotoViewController
+              imageProvider: NetworkImage(url), // تحميل الصورة من الرابط
+              minScale: PhotoViewComputedScale.contained, // الحد الأدنى للزووم
+              maxScale: PhotoViewComputedScale.covered, // الحد الأقصى للزووم
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // إغلاق المعاينة عند الضغط على "إغلاق"
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void showDeleteDialog(context, double height, double width, int index) {
@@ -222,7 +269,7 @@ class DocumentController extends GetxController {
         isCurrentDownloading = List.generate(value.data?.length ?? 1, (index) {
           return false.obs;
         });
-        print("----${value.data?[0].document_url}");
+        // print("----${value.data?[0].document_url}");
         gotData.value = true;
       })
       ..onError((error, stackTrace) {

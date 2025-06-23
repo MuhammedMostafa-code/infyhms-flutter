@@ -6,16 +6,20 @@ import 'package:get/get.dart';
 import 'package:infyhms_flutter/constant/color_const.dart';
 import 'package:infyhms_flutter/constant/text_style_const.dart';
 import 'package:infyhms_flutter/controller/patient/document_controller/document_list_controller.dart';
+import 'package:infyhms_flutter/screens/patient/Document_Image.dart';
 import 'package:infyhms_flutter/screens/patient/document/edit_document_screen.dart';
 import 'package:infyhms_flutter/screens/patient/document/new_document_screen.dart';
 import 'package:infyhms_flutter/utils/image_utils.dart';
 import 'package:infyhms_flutter/utils/preference_utils.dart';
 import 'package:infyhms_flutter/utils/string_utils.dart';
 
+import '../../../New Functions/Search.dart';
+import '../../../New Functions/Search_With_API.dart';
+
 class DocumentScreen extends StatelessWidget {
   DocumentScreen({Key? key}) : super(key: key);
   DocumentController documentController = Get.put(DocumentController());
-
+  String query = '' ;
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -82,7 +86,6 @@ class DocumentScreen extends StatelessWidget {
                                         backgroundColor: const Color(0xFFFCE5E5),
                                         label: StringUtils.delete,
                                         foregroundColor: ColorConst.redColor,
-                                        // lableColor: Colors.red,
                                       ),
                                     ],
                                   ),
@@ -103,17 +106,9 @@ class DocumentScreen extends StatelessWidget {
                                         width * 0.037,
                                       ),
                                     ),
-                                    leading: Container(
-                                      height: 35,
-                                      width: 35,
-                                      decoration: const BoxDecoration(
-                                        image: DecorationImage(
-                                          fit: BoxFit.contain,
-                                          // image: NetworkImage(controller.documentsModel?.data?[index].document_url ?? ""),
-                                          image: AssetImage("assets/icon/imageIcon.png"),
-                                        ),
-                                      ),
-                                    ),
+                                    leading: IconButton(onPressed: () {
+                                      documentController.showDocumentWithZoom(context , index);
+                                    }, icon: Icon(Icons.image)),
                                     trailing: Obx(() {
                                       return documentController.isCurrentDownloading[index].value
                                           ? const CircularProgressIndicator(color: ColorConst.primaryColor)
@@ -141,33 +136,57 @@ class DocumentScreen extends StatelessWidget {
                         );
             }),
           ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: GestureDetector(
-                onTap: () async {
-                  final message = await Get.to(() => NewDocumentScreen(), transition: Transition.rightToLeft);
-                  if (message == "Call API") {
-                    if (PreferenceUtils.getBoolValue("isDoctor")) {
-                      documentController.getDoctorDocuments();
-                    } else {
-                      documentController.getDocuments();
-                    }
-                  }
-                },
-                child: Container(
-                  height: 55,
-                  width: 55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: ColorConst.blueColor,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom:  25, right: 15),
+                  child: GestureDetector(
+                    onTap: () async {
+                      showSearch(context: context, delegate: DocumentSearch());
+                    },
+                    child: Container(
+                      height: 55,
+                      width: 55,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: ColorConst.blueColor,
+                      ),
+                      child: const Icon(Icons.search_outlined, color: ColorConst.whiteColor),
+                    ),
                   ),
-                  child: const Icon(Icons.add, color: ColorConst.whiteColor),
                 ),
               ),
-            ),
-          ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom:  25, right: 15),
+                  child: GestureDetector(
+                    onTap: () async {
+                      final message = await Get.to(() => NewDocumentScreen(), transition: Transition.rightToLeft);
+                      if (message == "Call API") {
+                        if (PreferenceUtils.getBoolValue("isDoctor")) {
+                          documentController.getDoctorDocuments();
+                        } else {
+                          documentController.getDocuments();
+                        }
+                      }
+                    },
+                    child: Container(
+                      height: 55,
+                      width: 55,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: ColorConst.blueColor,
+                      ),
+                      child: const Icon(Icons.add, color: ColorConst.whiteColor),
+                    ),
+                  ),
+                ),
+              ),
+            ],),
         ],
       );
     } else {
@@ -217,7 +236,6 @@ class DocumentScreen extends StatelessWidget {
                                         backgroundColor: ColorConst.orangeColor.withOpacity(0.15),
                                         label: StringUtils.edit,
                                         foregroundColor: ColorConst.orangeColor,
-                                        // lableColor: ColorConst.orangeColor,
                                       ),
                                     ],
                                   ),
@@ -232,7 +250,6 @@ class DocumentScreen extends StatelessWidget {
                                         backgroundColor: const Color(0xFFFCE5E5),
                                         label: StringUtils.delete,
                                         foregroundColor: ColorConst.redColor,
-                                        // lableColor: Colors.red,
                                       ),
                                     ],
                                   ),
@@ -259,7 +276,6 @@ class DocumentScreen extends StatelessWidget {
                                         decoration: const BoxDecoration(
                                           image: DecorationImage(
                                             fit: BoxFit.contain,
-                                            // image: NetworkImage(controller.documentsModel?.data?[index].document_url ?? ""),
                                             image: AssetImage("assets/icon/imageIcon.png"),
                                           ),
                                         ),
@@ -290,33 +306,57 @@ class DocumentScreen extends StatelessWidget {
                         );
             }),
           ),
-          Align(
-            alignment: Alignment.bottomRight,
-            child: Padding(
-              padding: const EdgeInsets.all(25),
-              child: GestureDetector(
-                onTap: () async {
-                  final message = await Get.to(() => NewDocumentScreen(), transition: Transition.rightToLeft);
-                  if (message == "Call API") {
-                    if (PreferenceUtils.getBoolValue("isDoctor")) {
-                      documentController.getDoctorDocuments();
-                    } else {
-                      documentController.getDocuments();
-                    }
-                  }
-                },
-                child: Container(
-                  height: 55,
-                  width: 55,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: ColorConst.blueColor,
+          Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom:  25, right: 15),
+                child: GestureDetector(
+                  onTap: () async {
+                    showSearch(context: context, delegate: DocumentSearch());
+                  },
+                  child: Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: ColorConst.blueColor,
+                    ),
+                    child: const Icon(Icons.search_outlined, color: ColorConst.whiteColor),
                   ),
-                  child: const Icon(Icons.add, color: ColorConst.whiteColor),
                 ),
               ),
             ),
-          ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom:  25, right: 15),
+                child: GestureDetector(
+                  onTap: () async {
+                    final message = await Get.to(() => NewDocumentScreen(), transition: Transition.rightToLeft);
+                    if (message == "Call API") {
+                      if (PreferenceUtils.getBoolValue("isDoctor")) {
+                        documentController.getDoctorDocuments();
+                      } else {
+                        documentController.getDocuments();
+                      }
+                    }
+                  },
+                  child: Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: ColorConst.blueColor,
+                    ),
+                    child: const Icon(Icons.add, color: ColorConst.whiteColor),
+                  ),
+                ),
+              ),
+            ),
+          ],),
         ],
       );
     }

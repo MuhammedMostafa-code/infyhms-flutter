@@ -14,6 +14,7 @@ class CommonDropDown extends StatelessWidget {
     this.color,
     this.value,
     required this.dropdownItems,
+    this.onCansle,
   }) : super(key: key);
 
   final List<DropdownMenuItem<String>> dropdownItems;
@@ -25,6 +26,7 @@ class CommonDropDown extends StatelessWidget {
   final Color? color;
   final bool? enabled;
   final String? value;
+  final Function? onCansle;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,10 @@ class CommonDropDown extends StatelessWidget {
         isExpanded: true,
         // validator: (value) => value == null ? 'Please select any code' : null,
         menuMaxHeight: dropButtonHeight,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded),
+        icon: Row(children: [
+         const Icon(Icons.keyboard_arrow_down_rounded),
+         IconButton(onPressed: (){onCansle!();}, icon: const Icon(Icons.cancel_sharp))
+        ],),
         decoration: InputDecoration(
           enabled: enabled ?? true,
           errorText: errorText,

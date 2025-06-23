@@ -14,11 +14,11 @@ class DocumentsModel {
     this.message,
   });
 
-  factory DocumentsModel.fromJson(Map<String, dynamic> json) => _$DocumentsModelFromJson(json);
+  factory DocumentsModel.fromJson(Map<String, dynamic> json) =>
+      _$DocumentsModelFromJson(json);
 
   Map<String, dynamic> toJson() => _$DocumentsModelToJson(this);
 }
-
 
 @JsonSerializable()
 class DocumentData {
@@ -31,7 +31,6 @@ class DocumentData {
   String? is_default;
   String? document_url;
 
-
   DocumentData({
     this.id,
     this.title,
@@ -42,8 +41,8 @@ class DocumentData {
     this.is_default,
     this.document_url,
   });
-  factory DocumentData.fromJson(Map<String, dynamic> json) => _$DocumentDataFromJson(json);
+  factory DocumentData.fromJson(Map<String, dynamic> json) =>
+      _$DocumentDataFromJson(json);
 
   Map<String, dynamic> toJson() => _$DocumentDataToJson(this);
-
 }
