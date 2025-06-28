@@ -417,8 +417,10 @@ class NewDocumentController extends GetxController {
       <TextEditingController>[].obs;
 
   DocumentsTypeModel? documentsTypeModel;
-  Rx<DocumentsSubTypeModel?> documentsSubTypeModel = Rx<DocumentsSubTypeModel?>(null);
-  Rx<DocumentsSpecificTypeModel?> documentsSpecificTypeModel = Rx<DocumentsSpecificTypeModel?>(null);
+  Rx<DocumentsSubTypeModel?> documentsSubTypeModel =
+      Rx<DocumentsSubTypeModel?>(null);
+  Rx<DocumentsSpecificTypeModel?> documentsSpecificTypeModel =
+      Rx<DocumentsSpecificTypeModel?>(null);
   var getDocumentParentsModel = Rx<GetDocumentParentsModel?>(null);
   DoctorDocumentsTypeModel? doctorDocumentsTypeModel;
   DoctorPatientsDocumentsModel? doctorPatientsDocumentsModel;
@@ -429,7 +431,7 @@ class NewDocumentController extends GetxController {
       EntityExtractor(language: EntityExtractorLanguage.english);
   RxString docId = '0'.obs;
   RxString? docSubId = '0'.obs;
-  RxString? docSpecificId = '0'.obs;
+  RxString docSpecificId = '0'.obs;
   ImagePicker imagePicker = ImagePicker();
   RxBool showFile = false.obs; // لن يتم استخدامها بشكل مباشر بعد الآن
   RxBool gotData = false.obs;
@@ -461,12 +463,12 @@ class NewDocumentController extends GetxController {
     super.onInit();
     if (PreferenceUtils.getBoolValue("isDoctor")) {
       getDoctorDocumentsType();
-      getDocumentSubType();
+      getDocumentSubType(id: docId);
       getDocumentSpicificType();
       getLabTests();
     } else {
       getDocumentTypes();
-      getDocumentSubType();
+      getDocumentSubType(id: docId);
       getDocumentSpicificType();
       getLabTests();
     }
@@ -627,15 +629,13 @@ class NewDocumentController extends GetxController {
     textRecognizer.close();
   }
 
-  List<String> dateEntitiees =
-      [];
-  List<String> phoneEntitiees =
-      [];
+  List<String> dateEntitiees = [];
+  List<String> phoneEntitiees = [];
 
   final TextEditingController? documentSubTypeTextController =
-  TextEditingController();
+      TextEditingController();
   final TextEditingController? documentSpecificTypeTextController =
-  TextEditingController();
+      TextEditingController();
 
   Future<void> extractEntities({required int index}) async {
     final Map<String, List<String>> entityMap = {};
@@ -686,7 +686,6 @@ class NewDocumentController extends GetxController {
       });
   }
 
-
   Future getLabTests() async {
     StringUtils.client.getLabTests(PreferenceUtils.getStringValue("token"))
       ..then((value) {
@@ -703,20 +702,21 @@ class NewDocumentController extends GetxController {
       });
   }
 
-  Future getDocumentSubType({RxString? id}) async {
-    id = docSubId;
-    StringUtils.client.getDocumentsSubType(
-        PreferenceUtils.getStringValue("token"), id!.value ?? '0')
-      ..then((value) {
-        documentsSubTypeModel.value = value;
-        gotDocumentSubTypeData.value = true;
-        update();
-      })
-      ..onError((DioError error, stackTrace) {
-        gotDocumentSubTypeData.value = true;
+  Future<DocumentsSubTypeModel> getDocumentSubType({required RxString? id}) async {
+    try {
+      final value = await StringUtils.client.getDocumentsSubType(
+          PreferenceUtils.getStringValue("token"), id!.value ?? '0');
+      documentsSubTypeModel.value = value;
+      gotDocumentSubTypeData.value = true;
+      update();
+      return value;
+    } catch (error) {
+      gotDocumentSubTypeData.value = true;
+      if (error is DioError) {
         CheckSocketException.checkSocketException(error);
-        return DocumentsSubTypeModel();
-      });
+      }
+      return DocumentsSubTypeModel();
+    }
   }
 
   Future getDocumentSpicificType() async {
@@ -739,11 +739,11 @@ class NewDocumentController extends GetxController {
     try {
       final value = await StringUtils.client.getDocumentParents(
         PreferenceUtils.getStringValue("token"),
-        docSpecificId?.value ?? '0',
+        docSpecificId.value ?? '0',
       );
       getDocumentParentsModel.value = value;
       gotDocumentParentsData.value = true;
-      print('==========================================================================================================sfasdasdsa');
+      print('getDocumentParents');
       update();
     } catch (error) {
       gotDocumentParentsData.value = true;
@@ -754,32 +754,31 @@ class NewDocumentController extends GetxController {
     }
   }
 
-
   RxString selectedDocType = ''.obs;
   RxString selectedDocSubType = ''.obs;
 
-
-  void updateDropdownControllers() {
+  void updateDropdownControllers() async {
     // تحديث حقل Document Type
-      final docTypeItem = doctorDocumentsTypeModel!.data!
-          .firstWhere((item) => item.id.toString() == docId.value, orElse: () => null!);
-      if (docTypeItem != null) {
-        selectedDocType.value = docTypeItem.id.toString();
-        // إذا كان لديك controller للنص:
-        // documentTypeTextController.text = docTypeItem.name ?? '';
-      }
-
-
-    // تحديث حقل Document SubType
-    final docSubTypeItem = documentsSubTypeModel.value?.data?.entries
-        .firstWhere((entry) => entry.key == docSubId!.value, orElse: () => null!);
-    if (docSubTypeItem != null) {
-      selectedDocSubType.value = docSubTypeItem.key;
-      documentSubTypeTextController!.text = docSubTypeItem.value;
+    final docTypeItem = doctorDocumentsTypeModel!.data!.firstWhere(
+        (item) => item.id.toString() == docId.value,
+        orElse: () => null!);
+    if (docTypeItem != null) {
+      selectedDocType.value = docTypeItem.id.toString();
     }
+    gotDocumentSubTypeData.value = false;
+    await getDocumentSubType(id: '2'.obs).then(
+      (value) {
+        print(value);
+        final docSubTypeItem = documentsSubTypeModel.value?.data?.entries
+            .firstWhere((entry) => entry.key == docSubId!.value,
+                orElse: () => null!);
+        if (docSubTypeItem != null) {
+          selectedDocSubType.value = docSubTypeItem.key;
+          documentSubTypeTextController!.text = docSubTypeItem.value;
+        }
+      },
+    );
   }
-
-
 
   Future AddPatient() async {}
 
@@ -813,18 +812,17 @@ class NewDocumentController extends GetxController {
             .first; // احتياطي في حال وجود ملفات ولكن الصفحة الحالية لا تحتوي على ملف (حالة غير محتملة)
 
       CommonLoader.showLoader();
-        if (patientId == null) {
-          DisplaySnackBar.displaySnackBar("Please select patient");
-        } else {
-          _uploadDoctorDocument(
-              token, title, documentId, patient, notes, fileToUpload);
-        }
+      if (patientId == null) {
+        DisplaySnackBar.displaySnackBar("Please select patient");
+      } else {
+        _uploadDoctorDocument(
+            token, title, documentId, patient, notes, fileToUpload);
+      }
     }
   }
 
   void _uploadDoctorDocument(String token, String title, String documentId,
-      String patient, String notes, File? fileToUpload)
-  {
+      String patient, String notes, File? fileToUpload) {
     String details = documentDetailsControllers[currentPageIndex.value]
         .text
         .trim(); // استخدام controller الصفحة الحالية
@@ -851,8 +849,7 @@ class NewDocumentController extends GetxController {
   }
 
   void _uploadPatientDocument(String token, String title, String documentId,
-      String notes, File? fileToUpload)
-  {
+      String notes, File? fileToUpload) {
     String details = documentDetailsControllers[currentPageIndex.value]
         .text
         .trim(); // استخدام controller الصفحة الحالية
@@ -915,7 +912,7 @@ class NewDocumentController extends GetxController {
         doctorPatientsDocumentsModel = value;
         if (PreferenceUtils.getBoolValue("isDoctor") == false) {
           final targetPatient = value.data!.firstWhere(
-                (element) => element.user_id == userData!.id,
+            (element) => element.user_id == userData!.id,
             orElse: () => null!,
           );
 
@@ -935,6 +932,4 @@ class NewDocumentController extends GetxController {
         return DoctorPatientsDocumentsModel();
       });
   }
-
-
 }

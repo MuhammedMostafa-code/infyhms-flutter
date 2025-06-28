@@ -5,6 +5,9 @@ import 'package:infyhms_flutter/constant/text_style_const.dart';
 import 'package:infyhms_flutter/controller/doctor/doctor_prescription_controller/doctor_prescription_controller.dart';
 import 'package:infyhms_flutter/screens/doctor/doctor_prescription/doctor_prescription_detail_screen.dart';
 
+import '../../../utils/preference_utils.dart';
+import '../../patient/prescription/new_prescriptions_screen.dart';
+
 class DoctorPrescriptionScreen extends StatelessWidget {
   DoctorPrescriptionScreen({Key? key}) : super(key: key);
   final DoctorPrescriptionController doctorPrescriptionController = Get.put(DoctorPrescriptionController());
