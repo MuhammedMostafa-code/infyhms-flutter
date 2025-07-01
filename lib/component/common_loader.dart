@@ -42,4 +42,9 @@ class CommonLoader {
       barrierDismissible: false,
     );
   }
+  static void hideLoader() {
+    if (Get.isDialogOpen ?? false) {
+      Get.back(); // بيقفل الـ Dialog لو مفتوح
+    }
+  }
 }

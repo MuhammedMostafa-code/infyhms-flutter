@@ -452,73 +452,170 @@ class NewDocumentController extends GetxController {
 
   Future AddPatient() async {}
 
-  void createDocuments() {
-    for (int i = 0; i < files.length; i++) {
-      // ... (باقي الكود كما هو، ولكن يمكن تعديله لاحقًا إذا كنت تريد معالجة البيانات لكل صفحة بشكل منفصل)
-      if (titleControllers[i].text.trim().isEmpty) {
-        // استخدام controller الصفحة الحالية
-        DisplaySnackBar.displaySnackBar("Please enter title");
-      } else if (docId == null) {
-        DisplaySnackBar.displaySnackBar("Please select document type");
-      } else if (files.isEmpty) {
-        DisplaySnackBar.displaySnackBar("Please attach file");
-      } else if (reportDateControllers[i].text.isEmpty) {
-        // استخدام controller الصفحة الحالية
-        DisplaySnackBar.displaySnackBar("Please enter ReportDate");
-      } else {
-        String token = PreferenceUtils.getStringValue("token");
-        String title = titleControllers[i]
-            .text
-            .trim(); // استخدام controller الصفحة الحالية
-        String documentId = docId.value ?? "";
-        String notes = notesControllers[i]
-            .text
-            .trim(); // استخدام controller الصفحة الحالية
-        String patient = patientId ?? "";
-        File? fileToUpload =
-            files.isNotEmpty ? files[i] : null; // استخدام ملف الصفحة الحالية
-        if (fileToUpload == null && files.isNotEmpty) fileToUpload = files[i];
-        if (i == files.length - 1) {CommonLoader.showLoader();}
+  // void createDocuments() {
+  //   for (int i = 0; i < files.length; i++) {
+  //     // ... (باقي الكود كما هو، ولكن يمكن تعديله لاحقًا إذا كنت تريد معالجة البيانات لكل صفحة بشكل منفصل)
+  //     if (titleControllers[i].text.trim().isEmpty) {
+  //       // استخدام controller الصفحة الحالية
+  //       DisplaySnackBar.displaySnackBar("Please enter title");
+  //     } else if (docId == null) {
+  //       DisplaySnackBar.displaySnackBar("Please select document type");
+  //     } else if (files.isEmpty) {
+  //       DisplaySnackBar.displaySnackBar("Please attach file");
+  //     } else if (reportDateControllers[i].text.isEmpty) {
+  //       // استخدام controller الصفحة الحالية
+  //       DisplaySnackBar.displaySnackBar("Please enter ReportDate");
+  //     } else {
+  //       String token = PreferenceUtils.getStringValue("token");
+  //       String title = titleControllers[i]
+  //           .text
+  //           .trim(); // استخدام controller الصفحة الحالية
+  //       String documentId = docId.value ?? "";
+  //       String notes = notesControllers[i]
+  //           .text
+  //           .trim(); // استخدام controller الصفحة الحالية
+  //       String patient = patientId ?? "";
+  //       File? fileToUpload =
+  //           files.isNotEmpty ? files[i] : null; // استخدام ملف الصفحة الحالية
+  //       if (fileToUpload == null && files.isNotEmpty) fileToUpload = files[i];
+  //       if (i == files.length - 1) {CommonLoader.showLoader();}
+  //
+  //       if (patientId == null) {
+  //         DisplaySnackBar.displaySnackBar("Please select patient");
+  //       } else {
+  //         _uploadDoctorDocument(
+  //             token, title, documentId, patient, notes, fileToUpload, i);
+  //       }
+  //     }
+  //   }
+  // }
+  //
+  // void _uploadDoctorDocument(String token, String title, String documentId,
+  //     String patient, String notes, File? fileToUpload, int index)
+  // {
+  //   String details = documentDetailsControllers[index]
+  //       .text
+  //       .trim(); // استخدام controller الصفحة الحالية
+  //   String conclusion = conclusionControllers[index]
+  //       .text
+  //       .trim(); // استخدام controller الصفحة الحالية
+  //
+  //   StringUtils.client.createNewDoctorDocument(
+  //     token,
+  //     title,
+  //     details,
+  //     documentId,
+  //     patient,
+  //     fileToUpload!, // تم التأكد من وجود ملف في createDocuments
+  //     notes,
+  //   )
+  //     ..then(
+  //       (value) {
+  //         Get.back();
+  //         Get.back(result: "Call API");
+  //         DisplaySnackBar.displaySnackBar("Document uploaded successfully");
+  //       },
+  //     )
+  //     ..onError((DioError error, stackTrace) {
+  //       _handleDocumentUploadError(error);
+  //       return DoctorDocumentsCRUDModel();
+  //     });
+  // }
+  Future<void> createDocuments() async {
+    if (files.isEmpty) {
+      DisplaySnackBar.displaySnackBar("Please attach file");
+      return;
+    }
 
-        if (patientId == null) {
-          DisplaySnackBar.displaySnackBar("Please select patient");
-        } else {
-          _uploadDoctorDocument(
-              token, title, documentId, patient, notes, fileToUpload, i);
-        }
+    if (docId == null) {
+      DisplaySnackBar.displaySnackBar("Please select document type");
+      return;
+    }
+
+    if (patientId == null) {
+      DisplaySnackBar.displaySnackBar("Please select patient");
+      return;
+    }
+
+    final String token = PreferenceUtils.getStringValue("token");
+    final String documentId = docId.value ?? "";
+    final String patient = patientId ?? "";
+
+    CommonLoader.showLoader();
+
+    List<Future> uploadFutures = [];
+
+    for (int i = 0; i < files.length; i++) {
+      final String title = titleControllers[i].text.trim();
+      final String reportDate = reportDateControllers[i].text.trim();
+
+      if (title.isEmpty) {
+        DisplaySnackBar.displaySnackBar("Please enter title for document ${i + 1}");
+        CommonLoader.hideLoader();
+        return;
       }
+
+      if (reportDate.isEmpty) {
+        DisplaySnackBar.displaySnackBar("Please enter report date for document ${i + 1}");
+        CommonLoader.hideLoader();
+        return;
+      }
+
+      final File fileToUpload = files[i];
+      final String notes = notesControllers[i].text.trim();
+      final String details = documentDetailsControllers[i].text.trim();
+      final String conclusion = conclusionControllers[i].text.trim();
+
+      // إضافة الـ future لقائمة الانتظار
+      uploadFutures.add(_uploadDoctorDocument(
+        token: token,
+        title: title,
+        documentId: documentId,
+        patient: patient,
+        notes: notes,
+        file: fileToUpload,
+        details: details,
+        conclusion: conclusion,
+      ));
+    }
+
+    try {
+      await Future.wait(uploadFutures);
+      CommonLoader.hideLoader();
+      Get.back(result: "Call API"); // <-- دي بس، تكفي
+      DisplaySnackBar.displaySnackBar("All documents uploaded successfully");
+    } catch (e) {
+      CommonLoader.hideLoader();
+      // الخطأ اتعالج جوه uploadDoctorDocument
     }
   }
-
-  void _uploadDoctorDocument(String token, String title, String documentId,
-      String patient, String notes, File? fileToUpload, int index) {
-    String details = documentDetailsControllers[index]
-        .text
-        .trim(); // استخدام controller الصفحة الحالية
-    String conclusion = conclusionControllers[index]
-        .text
-        .trim(); // استخدام controller الصفحة الحالية
-
-    StringUtils.client.createNewDoctorDocument(
-      token,
-      title,
-      details,
-      documentId,
-      patient,
-      fileToUpload!, // تم التأكد من وجود ملف في createDocuments
-      notes,
-    )
-      ..then(
-        (value) {
-          Get.back();
-          Get.back(result: "Call API");
-          DisplaySnackBar.displaySnackBar("Document uploaded successfully");
-        },
-      )
-      ..onError((DioError error, stackTrace) {
-        _handleDocumentUploadError(error);
-        return DoctorDocumentsCRUDModel();
-      });
+  Future<void> _uploadDoctorDocument({
+    required String token,
+    required String title,
+    required String documentId,
+    required String patient,
+    required String notes,
+    required File file,
+    required String details,
+    required String conclusion,
+  }) async {
+    try {
+      await StringUtils.client.createNewDoctorDocument(
+        token,
+        title,
+        details,
+        documentId,
+        patient,
+        file,
+        notes,
+      );
+    } on DioError catch (error) {
+      _handleDocumentUploadError(error);
+      rethrow; // علشان يتم كشف الخطأ في Future.wait
+    } catch (e) {
+      print("Unexpected error: $e");
+      rethrow;
+    }
   }
 
   void _uploadPatientDocument(String token, String title, String documentId,

@@ -198,16 +198,14 @@ class DocumentController extends GetxController {
                         ColorConst.whiteColor,
                         width * 0.05,
                       ),
-                      onTap: () async{
-                        await Future.delayed(Duration(seconds: 3));
-                          Get.back();
-                          if (PreferenceUtils.getBoolValue("isDoctor")) {
-                            deleteDoctorDocument(
-                                doctorDocumentsModel?.data?[index].id ?? 0);
-                          } else {
-                            deleteDocData(documentsModel?.data?[index].id ?? 0);
-                          }
-
+                      onTap: () async {
+                        Get.back();
+                        if (PreferenceUtils.getBoolValue("isDoctor")) {
+                          deleteDoctorDocument(
+                              doctorDocumentsModel?.data?[index].id ?? 0);
+                        } else {
+                          deleteDocData(documentsModel?.data?[index].id ?? 0);
+                        }
                       },
                       color: ColorConst.blueColor,
                       text: StringUtils.delete,
@@ -289,7 +287,7 @@ class DocumentController extends GetxController {
       });
   }
 
-  void deleteDoctorDocument(int id) {
+  Future deleteDoctorDocument(int id) async {
     CommonLoader.showLoader();
     StringUtils.client.deleteDoctorDocuments(
         PreferenceUtils.getStringValue("token"), id.toString())
