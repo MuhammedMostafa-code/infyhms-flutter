@@ -154,7 +154,6 @@ class SearchDropItemsLocalState extends State<SearchDropItemsLocal> {
 
   @override
   void dispose() {
-    widget.controller!.dispose();
     _focusNode.dispose();
     super.dispose();
   }

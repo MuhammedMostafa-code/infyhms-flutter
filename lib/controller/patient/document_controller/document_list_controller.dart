@@ -52,7 +52,8 @@ class DocumentController extends GetxController {
       progress.value = message[2];
       if (progress.value == 100) {
         if (isCurrentDownloading[currentIndex ?? 0].value) {
-          DisplaySnackBar.displaySnackBar("Document downloaded", 3 , ColorConst.greenColor);
+          DisplaySnackBar.displaySnackBar(
+              "Document downloaded", 3, ColorConst.greenColor);
           isCurrentDownloading[currentIndex ?? 0].value = false;
           currentIndex = null;
         }
@@ -80,7 +81,9 @@ class DocumentController extends GetxController {
       } else {
         isCurrentDownloading[index].value = true;
         try {
-          Directory filePath = await Directory("storage/emulated/0/Documents/HMS").create(recursive: true);
+          Directory filePath =
+              await Directory("storage/emulated/0/Documents/HMS")
+                  .create(recursive: true);
           await FlutterDownloader.enqueue(
             url: url,
             savedDir: filePath.path,
@@ -90,7 +93,8 @@ class DocumentController extends GetxController {
           );
         } catch (e) {
           isCurrentDownloading[index].value = false;
-          DisplaySnackBar.displaySnackBar("Document can't be downloaded", 3, ColorConst.redColor);
+          DisplaySnackBar.displaySnackBar(
+              "Document can't be downloaded", 3, ColorConst.redColor);
         }
       }
     }
@@ -105,7 +109,8 @@ class DocumentController extends GetxController {
     }
 
     if (url.isEmpty) {
-      DisplaySnackBar.displaySnackBar("No document URL found", 3, ColorConst.redColor);
+      DisplaySnackBar.displaySnackBar(
+          "No document URL found", 3, ColorConst.redColor);
       return;
     }
 
@@ -193,13 +198,16 @@ class DocumentController extends GetxController {
                         ColorConst.whiteColor,
                         width * 0.05,
                       ),
-                      onTap: () {
-                        Get.back();
-                        if (PreferenceUtils.getBoolValue("isDoctor")) {
-                          deleteDoctorDocument(doctorDocumentsModel?.data?[index].id ?? 0);
-                        } else {
-                          deleteDocData(documentsModel?.data?[index].id ?? 0);
-                        }
+                      onTap: () async{
+                        await Future.delayed(Duration(seconds: 3));
+                          Get.back();
+                          if (PreferenceUtils.getBoolValue("isDoctor")) {
+                            deleteDoctorDocument(
+                                doctorDocumentsModel?.data?[index].id ?? 0);
+                          } else {
+                            deleteDocData(documentsModel?.data?[index].id ?? 0);
+                          }
+
                       },
                       color: ColorConst.blueColor,
                       text: StringUtils.delete,
@@ -231,7 +239,8 @@ class DocumentController extends GetxController {
 
   void deleteDocData(int id) {
     CommonLoader.showLoader();
-    StringUtils.client.deleteDocument(PreferenceUtils.getStringValue("token"), id)
+    StringUtils.client
+        .deleteDocument(PreferenceUtils.getStringValue("token"), id)
       ..then((value) {
         Get.back();
         DisplaySnackBar.displaySnackBar("Document deleted");
@@ -246,7 +255,9 @@ class DocumentController extends GetxController {
 
   void getDocuments() {
     gotData.value = false;
-    StringUtils.client.getDocuments(PreferenceUtils.getStringValue("token")).then((value) {
+    StringUtils.client
+        .getDocuments(PreferenceUtils.getStringValue("token"))
+        .then((value) {
       documentsModel = value;
       gotData.value = true;
       isCurrentDownloading = List.generate(value.data?.length ?? 1, (index) {
@@ -269,7 +280,6 @@ class DocumentController extends GetxController {
         isCurrentDownloading = List.generate(value.data?.length ?? 1, (index) {
           return false.obs;
         });
-        // print("----${value.data?[0].document_url}");
         gotData.value = true;
       })
       ..onError((error, stackTrace) {
@@ -281,8 +291,9 @@ class DocumentController extends GetxController {
 
   void deleteDoctorDocument(int id) {
     CommonLoader.showLoader();
-    StringUtils.client.deleteDoctorDocuments(PreferenceUtils.getStringValue("token"), id.toString())
-      ..then((value) {
+    StringUtils.client.deleteDoctorDocuments(
+        PreferenceUtils.getStringValue("token"), id.toString())
+      ..then((value) async {
         Get.back();
         DisplaySnackBar.displaySnackBar("Document deleted");
         getDoctorDocuments();

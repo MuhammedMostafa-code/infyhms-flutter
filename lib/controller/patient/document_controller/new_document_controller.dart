@@ -1,380 +1,4 @@
-// import 'dart:convert';
-// import 'dart:io';
-//
-// import 'package:dio/dio.dart';
-// import 'package:flutter/cupertino.dart';
-// import 'package:flutter/material.dart';
-// import 'package:get/get.dart';
-// import 'package:google_ml_kit/google_ml_kit.dart';
-// import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:infyhms_flutter/component/common_loader.dart';
-// import 'package:infyhms_flutter/component/common_snackbar.dart';
-// import 'package:infyhms_flutter/component/common_socket_exception.dart';
-// import 'package:infyhms_flutter/model/doctor/doctor_document_model/doctor_documents_crud_model.dart';
-// import 'package:infyhms_flutter/model/doctor/doctor_document_model/doctor_documents_type_model.dart';
-// import 'package:infyhms_flutter/model/doctor/doctor_document_model/doctor_patients_model.dart';
-// import 'package:infyhms_flutter/model/patient/documents_model/document_store_model/document_store.dart';
-// import 'package:infyhms_flutter/model/patient/documents_model/documents_type_model/documents_type.dart';
-// import 'package:infyhms_flutter/utils/preference_utils.dart';
-// import 'package:infyhms_flutter/utils/string_utils.dart';
-// import 'package:http/http.dart' as http;
-//
-// class NewDocumentController extends GetxController {
-//   final TextEditingController titleController = TextEditingController();
-//   final TextEditingController notesController = TextEditingController();
-//   final TextEditingController DocumentDetailsController = TextEditingController();
-//   final TextEditingController ReportDateController = TextEditingController();
-//   final TextEditingController ConclusionController = TextEditingController();
-//   final TextEditingController LabNameController = TextEditingController();
-//   DocumentsTypeModel? documentsTypeModel;
-//   DoctorDocumentsTypeModel? doctorDocumentsTypeModel;
-//   DoctorPatientsDocumentsModel? doctorPatientsDocumentsModel;
-//   var text = ''.obs;
-//   final entityExtractor =
-//       EntityExtractor(language: EntityExtractorLanguage.english);
-//   String? docId;
-//   ImagePicker imagePicker = ImagePicker();
-//   Rx<XFile?> file = XFile("").obs;
-//   RxBool showFile = false.obs;
-//   RxBool gotData = false.obs;
-//   RxBool Scaning = false.obs;
-//   var image = <String>[
-//     'assets/icon/take_photo.png',
-//   ].obs;
-//   var extractedTexts = [].obs;
-//   var extractedConclusion= [].obs;
-//   String? patientId;
-//
-//   RxList<File> files = <File>[].obs;
-//   RxBool showFiles = false.obs;
-//   bool multiple = true;
-//   Future<File?> pickImage() async {
-//     try {
-//       if (multiple) {
-//         final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
-//         if (pickedFiles != null) {
-//           files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
-//           extractedTexts = [].obs;
-//           extractedConclusion = [].obs;
-//           for (var xfile in pickedFiles) {
-//             await textRecognition(xfile).then((value) {
-//               extractEntities();
-//             },);
-//           }
-//             print(file.value);
-//           showFiles.value = true;
-//
-//         }
-//       } else {
-//         final XFile? pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
-//         if (pickedFile != null) {
-//           file.value = XFile(pickedFile.path);
-//           showFiles.value = true;
-//         }
-//       }
-//     } catch (e) {
-//       print("Error picking images: $e");
-//     }
-//   }
-//   //
-//   //     البحث التتابعي بدلًا من الاعتماد على الإحداثيات فقط
-//   //
-//   //     إضافة شروط توقف ذكية:
-//   //
-//   //         توقف عند الأسطر الفارغة (أقل من 3 أحرف)
-//   //
-//   //         توقف عند العبارات الشائعة لنهاية القسم (مثال: "Best regards")
-//   //
-//   //         توقف عند القفزات الكبيرة في الإحداثيات الرأسية (>50 بكسل)
-//   //
-//   //     الحفاظ على فواصل الأسطر الأصلية عند الدمج
-//   //
-//   // مزايا التعديل:
-//   //
-//   //     يعمل مع معظم التنسيقات الطبية الشائعة
-//   //
-//   //     يتعرف على نهاية الخاتمة تلقائيًا
-//   //
-//   //     يتجنب تضمين التوقيعات والعناوين التالية
-//   //
-//   //     يحافظ على تنسيق النص الأساسي (مثل الأسطر الجديدة)
-//   //
-//   // ملاحظة: قد تحتاج لضبط القيم (مثل 50 بكسل) بناءً على دقة الصور الممسوحة ضوئيًا في تطبيقك.
-//   Future<void> textRecognition(XFile? img) async {
-//     final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
-//     final inputImage = InputImage.fromFilePath(img!.path);
-//     final RecognizedText recognizedText =
-//         await textRecognizer.processImage(inputImage);
-//
-//     // قائمة لتخزين النصوص مع الإحداثيات
-//     List<Map<String, dynamic>> blocksWithCoordinates = [];
-//
-//     // استخراج النصوص وإحداثياتها
-//     for (TextBlock block in recognizedText.blocks) {
-//       for (TextLine line in block.lines) {
-//         blocksWithCoordinates.add({
-//           'text': line.text,
-//           'top': line.boundingBox?.top ?? 0,
-//           'left': line.boundingBox?.left ?? 0,
-//           'bottom': line.boundingBox?.bottom ?? 0,
-//         });
-//       }
-//     }
-//
-//     // ترتيب النصوص
-//     const verticalTolerance = 10; // تفاوت السطور الرأسية
-//     blocksWithCoordinates.sort((a, b) {
-//       int verticalComparison = (a['top'] - b['top']).abs() <= verticalTolerance
-//           ? 0
-//           : a['top'].compareTo(b['top']);
-//       return verticalComparison != 0
-//           ? verticalComparison
-//           : a['left'].compareTo(b['left']);
-//     });
-//
-//     // String allText = blocksWithCoordinates.map((e) => e['text']).join('\n');
-//     // DocumentDetailsController.text += " $allText";
-//     String extractedText = blocksWithCoordinates.map((e) => e['text']).join('\n');
-//     extractedTexts.value.add(extractedText);
-//     DocumentDetailsController.text += extractedText;
-//     print(DocumentDetailsController.text);
-//     // البحث عن النصوص القريبة من "conclusion" مع تحسين الشروط
-//     List<String> conclusionRelatedTexts = [];
-//     bool foundConclusion = false;
-//     for (int i = 0; i < blocksWithCoordinates.length; i++) {
-//       final currentText = blocksWithCoordinates[i]['text'].toLowerCase();
-//
-//       if (currentText.contains("conclusion")) {
-//         foundConclusion = true;
-//         continue;
-//       }
-//
-//       if (foundConclusion) {
-//         // توقف عند أي من الشروط التالية:
-//         // 1. سطر فارغ (محتوى نصي أقل من 3 أحرف)
-//         // 2. وجود كلمات تشير إلى نهاية القسم (مثل "Best regards")
-//         // 3. تغيير كبير في الإحداثيات الرأسية (> 50 بكسل)
-//         if (blocksWithCoordinates[i]['text'].trim().length < 3 ||
-//             blocksWithCoordinates[i]['text'].toLowerCase().contains("best regards") ||
-//             (i > 0 && (blocksWithCoordinates[i]['top'] - blocksWithCoordinates[i-1]['bottom']).abs() > 50)) {
-//           break;
-//         }
-//
-//         conclusionRelatedTexts.add(blocksWithCoordinates[i]['text']);
-//       }
-//     }
-//     if (conclusionRelatedTexts.isNotEmpty) {
-//       extractedConclusion.value.add(conclusionRelatedTexts.join('\n').replaceAll(RegExp(r'\n\s*\n'), '\n').trim()) ;
-//       ConclusionController.text += conclusionRelatedTexts.join('\n').replaceAll(RegExp(r'\n\s*\n'), '\n').trim();
-//       print(ConclusionController.text);
-//     }
-//     textRecognizer.close();
-//   }
-//
-//   List<String> dateEntitiees = [];
-//   List<String> phoneEntitiees = [];
-//
-//   Future<void> extractEntities() async {
-//     final Map<String, List<String>> entityMap = {};
-//
-//     // Extracting entities
-//     final List<EntityAnnotation> annotations =
-//         await entityExtractor.annotateText(DocumentDetailsController.text);
-//     print("Annotations found: ${annotations.length}");
-//
-//     for (final annotation in annotations) {
-//       print("Annotation text: ${annotation.text}");
-//
-//       if (annotation.entities.first.type == EntityType.phone) {
-//         phoneEntitiees.add(annotation.text);
-//       }
-//       if (annotation.entities.first.type == EntityType.dateTime) {
-//         dateEntitiees.add(annotation.text);
-//         for (int i = 0; i < dateEntitiees.length; i++){
-//         ReportDateController.text += "${dateEntitiees[i]}";
-//         }
-//       }
-//       print(
-//           '${dateEntitiees}===============================================================');
-//       print(
-//           '${phoneEntitiees}===============================================================');
-//       for (final entity in annotation.entities) {
-//         final String entityType = entity.type.toString();
-//         print("Entity Type: $entityType, Entity Value: ${entity.rawValue}");
-//
-//         if (entityMap.containsKey(entityType)) {
-//           entityMap[entityType]!.add(entity.rawValue);
-//         } else {
-//           entityMap[entityType] = [entity.rawValue];
-//         }
-//       }
-//     }
-//     // Print the contents of the map
-//     print("Extracted Entities Map:");
-//     entityMap.forEach((type, values) {
-//       print('$type:');
-//       for (var value in values) {
-//         print('  - $value');
-//       }
-//     });
-//
-//     entityExtractor.close();
-//   }
-//
-//   void getDocumentTypes() {
-//     StringUtils.client.getDocumentsType(PreferenceUtils.getStringValue("token"))
-//       ..then((value) {
-//         documentsTypeModel = value;
-//         gotData.value = true;
-//         update();
-//       })
-//       ..onError((DioError error, stackTrace) {
-//         gotData.value = true;
-//         CheckSocketException.checkSocketException(error);
-//         return DocumentsTypeModel();
-//       });
-//   }
-//
-//   Future AddPatient() async {}
-//
-//   void createDocuments() {
-//     if (titleController.text.trim().isEmpty) {
-//       DisplaySnackBar.displaySnackBar("Please enter title");
-//     } else if (docId == null) {
-//       DisplaySnackBar.displaySnackBar("Please select document type");
-//     } else if (file.value == null) {
-//       DisplaySnackBar.displaySnackBar("Please attach file");
-//     } else if (DocumentDetailsController.text == null) {
-//       DisplaySnackBar.displaySnackBar("Please enter DocumentDetails");
-//     } else if (ConclusionController.text.isEmpty) {
-//       DisplaySnackBar.displaySnackBar("Please enter Conclusion");
-//     } else if (ReportDateController.text.isEmpty) {
-//       DisplaySnackBar.displaySnackBar("Please enter ReportDate");
-//     }
-//     // else if (LabNameController.text.isEmpty) {
-//     //   DisplaySnackBar.displaySnackBar("Please enter LabName");
-//     // }
-//     else {
-//       String token = PreferenceUtils.getStringValue("token");
-//       String title = titleController.text.trim();
-//       String details = DocumentDetailsController.text.trim();
-//       String documentId = docId ?? "";
-//       String notes = notesController.text.trim();
-//       String patient = patientId ?? "";
-//       String filePath = file.value?.path ?? "";
-//
-//       print("Token: $token");
-//       print("Title: $title");
-//       print("Document ID: $documentId");
-//       print("Patient ID: $patient");
-//       print("File Path: $filePath");
-//       print("Notes: $notes");
-//
-//       if (PreferenceUtils.getBoolValue("isDoctor")) {
-//         if (patientId == null) {
-//           DisplaySnackBar.displaySnackBar("Please select patient");
-//         } else {
-//           CommonLoader.showLoader();
-//
-//           StringUtils.client.createNewDoctorDocument(
-//             token,
-//             title,
-//             details,
-//             documentId,
-//             patient,
-//             File(filePath),
-//             notes,
-//           )
-//             ..then((value) {
-//               if (value.success == true) {
-//                 Get.back();
-//                 Get.back(result: "Call API");
-//                 DisplaySnackBar.displaySnackBar(
-//                     "Document uploaded successfully");
-//               }
-//             })
-//             ..onError((DioError error, stackTrace) {
-//               Get.back();
-//               Get.back();
-//               print("DioError: ${error.response?.statusCode}");
-//               print("Response Data: ${error.response?.data}");
-//               print("Request URL: ${error.requestOptions.uri}");
-//               CheckSocketException.checkSocketException(error);
-//               return DoctorDocumentsCRUDModel();
-//             });
-//         }
-//       } else {
-//         CommonLoader.showLoader();
-//
-//         StringUtils.client.storeDocument(
-//           token,
-//           title,
-//           documentId,
-//           notes,
-//           File(filePath),
-//         )
-//           ..then((value) {
-//             if (value.success == true) {
-//               Get.back();
-//               Get.back(result: "Call API");
-//               DisplaySnackBar.displaySnackBar("Document uploaded successfully");
-//             }
-//           })
-//           ..onError((DioError error, stackTrace) {
-//             Get.back();
-//             Get.back();
-//             print("DioError: ${error.response?.statusCode}");
-//             print("Response Data: ${error.response?.data}");
-//             print("Request URL: ${error.requestOptions.uri}");
-//             CheckSocketException.checkSocketException(error);
-//             return DocumentStoreModel();
-//           });
-//       }
-//     }
-//   }
-//
-//   /// doctor
-//   void getDoctorDocumentsType() {
-//     StringUtils.client
-//         .doctorDocumentType(PreferenceUtils.getStringValue("token"))
-//       ..then((value) {
-//         doctorDocumentsTypeModel = value;
-//         getPatients();
-//       })
-//       ..onError((DioError error, stackTrace) {
-//         getPatients();
-//         CheckSocketException.checkSocketException(error);
-//         return DoctorDocumentsTypeModel();
-//       });
-//   }
-//
-//   void getPatients() {
-//     StringUtils.client
-//         .doctorPatientsDocument(PreferenceUtils.getStringValue("token"))
-//       ..then((value) {
-//         doctorPatientsDocumentsModel = value;
-//         gotData.value = true;
-//       })
-//       ..onError((DioError error, stackTrace) {
-//         gotData.value = true;
-//         return DoctorPatientsDocumentsModel();
-//       });
-//   }
-//
-//   @override
-//   void onInit() {
-//     // TODO: implement onInit
-//     super.onInit();
-//     if (PreferenceUtils.getBoolValue("isDoctor")) {
-//       getDoctorDocumentsType();
-//     } else {
-//       getDocumentTypes();
-//     }
-//   }
-// }
 import 'dart:io';
-import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -383,9 +7,8 @@ import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:infyhms_flutter/New%20Functions/Normal_Search.dart';
+import 'package:infyhms_flutter/model/doctor/doctor_document_model/doctor_documents_model.dart';
 import 'package:infyhms_flutter/model/patient/lab_tests/gat_lab_tests.dart';
-
 import '../../../component/common_loader.dart';
 import '../../../component/common_snackbar.dart';
 import '../../../component/common_socket_exception.dart';
@@ -397,9 +20,11 @@ import '../../../model/patient/documents_model/document-parents/get-document-par
 import '../../../model/patient/documents_model/document_specific-type/document_specifc-type.dart';
 import '../../../model/patient/documents_model/document_store_model/document_store.dart';
 import '../../../model/patient/documents_model/document_sub-type-model/documents_sub-type.dart';
+import '../../../model/patient/documents_model/documents_model/documents.dart';
 import '../../../model/patient/documents_model/documents_type_model/documents_type.dart';
 import '../../../utils/preference_utils.dart';
 import '../../../utils/string_utils.dart';
+import 'document_list_controller.dart';
 
 class NewDocumentController extends GetxController {
   // قوائم من TextEditingController لكل حقل، لكل صفحة
@@ -416,12 +41,15 @@ class NewDocumentController extends GetxController {
   RxList<TextEditingController> labNameControllers =
       <TextEditingController>[].obs;
 
+  final DocumentController documentController = Get.put(DocumentController());
   DocumentsTypeModel? documentsTypeModel;
   Rx<DocumentsSubTypeModel?> documentsSubTypeModel =
       Rx<DocumentsSubTypeModel?>(null);
   Rx<DocumentsSpecificTypeModel?> documentsSpecificTypeModel =
       Rx<DocumentsSpecificTypeModel?>(null);
   var getDocumentParentsModel = Rx<GetDocumentParentsModel?>(null);
+  DocumentsModel? documentsModel;
+  DoctorDocumentsModel? doctorDocumentsModel;
   DoctorDocumentsTypeModel? doctorDocumentsTypeModel;
   DoctorPatientsDocumentsModel? doctorPatientsDocumentsModel;
   LabtestsModel? labtestsModel;
@@ -493,16 +121,55 @@ class NewDocumentController extends GetxController {
     files.value = []; // لا توجد ملفات في البداية
   }
 
+  // Future<void> pickImage({int? index}) async {
+  //   try {
+  //     if (multiple == true) {
+  //       final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
+  //       if (pickedFiles != null) {
+  //         files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
+  //
+  //         // إعادة تهيئة القوائم لتناسب عدد الصور الجديدة
+  //         _initializeControllersForNewImages(files.length);
+  //
+  //         showFiles.value = List.generate(files.length, (_) => RxBool(true));
+  //
+  //         for (int i = 0; i < pickedFiles.length; i++) {
+  //           await textRecognition(pickedFiles[i], index: i).then(
+  //             (value) {
+  //               extractEntities(index: i);
+  //             },
+  //           );
+  //         }
+  //         if (files.isNotEmpty) {
+  //           pageController.animateToPage(
+  //               0, // الانتقال للصفحة الأولى بعد اختيار الصور
+  //               duration: Duration(milliseconds: 300),
+  //               curve: Curves.easeInOut);
+  //         }
+  //       }
+  //     } else {
+  //       final XFile? pickedFile =
+  //           await ImagePicker().pickImage(source: ImageSource.gallery);
+  //       if (pickedFile != null) {
+  //         files.value = [File(pickedFile.path)].obs;
+  //         _initializeControllersForNewImages(files.length);
+  //         showFiles.value = List.generate(files.length, (_) => RxBool(true));
+  //         await textRecognition(pickedFile, index: 0).then((value) {
+  //           extractEntities(index: 0);
+  //         });
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print("Error picking images: $e");
+  //   }
+  // }
   Future<void> pickImage({int? index}) async {
     try {
       if (multiple == true) {
         final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
-        if (pickedFiles != null) {
+        if (pickedFiles != null && pickedFiles.isNotEmpty) {
           files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
-
-          // إعادة تهيئة القوائم لتناسب عدد الصور الجديدة
           _initializeControllersForNewImages(files.length);
-
           showFiles.value = List.generate(files.length, (_) => RxBool(true));
 
           for (int i = 0; i < pickedFiles.length; i++) {
@@ -513,11 +180,11 @@ class NewDocumentController extends GetxController {
             );
           }
           if (files.isNotEmpty) {
-            pageController.animateToPage(
-                0, // الانتقال للصفحة الأولى بعد اختيار الصور
-                duration: Duration(milliseconds: 300),
-                curve: Curves.easeInOut);
+            pageController.animateToPage(0,
+                duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
           }
+        } else {
+          return;
         }
       } else {
         final XFile? pickedFile =
@@ -529,6 +196,8 @@ class NewDocumentController extends GetxController {
           await textRecognition(pickedFile, index: 0).then((value) {
             extractEntities(index: 0);
           });
+        } else {
+          return;
         }
       }
     } catch (e) {
@@ -702,7 +371,8 @@ class NewDocumentController extends GetxController {
       });
   }
 
-  Future<DocumentsSubTypeModel> getDocumentSubType({required RxString? id}) async {
+  Future<DocumentsSubTypeModel> getDocumentSubType(
+      {required RxString? id}) async {
     try {
       final value = await StringUtils.client.getDocumentsSubType(
           PreferenceUtils.getStringValue("token"), id!.value ?? '0');
@@ -766,7 +436,7 @@ class NewDocumentController extends GetxController {
       selectedDocType.value = docTypeItem.id.toString();
     }
     gotDocumentSubTypeData.value = false;
-    await getDocumentSubType(id: '2'.obs).then(
+    await getDocumentSubType(id: docId).then(
       (value) {
         print(value);
         final docSubTypeItem = documentsSubTypeModel.value?.data?.entries
@@ -783,50 +453,49 @@ class NewDocumentController extends GetxController {
   Future AddPatient() async {}
 
   void createDocuments() {
-    // ... (باقي الكود كما هو، ولكن يمكن تعديله لاحقًا إذا كنت تريد معالجة البيانات لكل صفحة بشكل منفصل)
-    if (titleControllers[currentPageIndex.value].text.trim().isEmpty) {
-      // استخدام controller الصفحة الحالية
-      DisplaySnackBar.displaySnackBar("Please enter title");
-    } else if (docId == null) {
-      DisplaySnackBar.displaySnackBar("Please select document type");
-    } else if (files.isEmpty) {
-      DisplaySnackBar.displaySnackBar("Please attach file");
-    } else if (reportDateControllers[currentPageIndex.value].text.isEmpty) {
-      // استخدام controller الصفحة الحالية
-      DisplaySnackBar.displaySnackBar("Please enter ReportDate");
-    } else {
-      String token = PreferenceUtils.getStringValue("token");
-      String title = titleControllers[currentPageIndex.value]
-          .text
-          .trim(); // استخدام controller الصفحة الحالية
-      String documentId = docId!.value ?? "";
-      String notes = notesControllers[currentPageIndex.value]
-          .text
-          .trim(); // استخدام controller الصفحة الحالية
-      String patient = patientId ?? "";
-      File? fileToUpload = files.isNotEmpty
-          ? files[currentPageIndex.value]
-          : null; // استخدام ملف الصفحة الحالية
-      if (fileToUpload == null && files.isNotEmpty)
-        fileToUpload = files
-            .first; // احتياطي في حال وجود ملفات ولكن الصفحة الحالية لا تحتوي على ملف (حالة غير محتملة)
-
-      CommonLoader.showLoader();
-      if (patientId == null) {
-        DisplaySnackBar.displaySnackBar("Please select patient");
+    for (int i = 0; i < files.length; i++) {
+      // ... (باقي الكود كما هو، ولكن يمكن تعديله لاحقًا إذا كنت تريد معالجة البيانات لكل صفحة بشكل منفصل)
+      if (titleControllers[i].text.trim().isEmpty) {
+        // استخدام controller الصفحة الحالية
+        DisplaySnackBar.displaySnackBar("Please enter title");
+      } else if (docId == null) {
+        DisplaySnackBar.displaySnackBar("Please select document type");
+      } else if (files.isEmpty) {
+        DisplaySnackBar.displaySnackBar("Please attach file");
+      } else if (reportDateControllers[i].text.isEmpty) {
+        // استخدام controller الصفحة الحالية
+        DisplaySnackBar.displaySnackBar("Please enter ReportDate");
       } else {
-        _uploadDoctorDocument(
-            token, title, documentId, patient, notes, fileToUpload);
+        String token = PreferenceUtils.getStringValue("token");
+        String title = titleControllers[i]
+            .text
+            .trim(); // استخدام controller الصفحة الحالية
+        String documentId = docId.value ?? "";
+        String notes = notesControllers[i]
+            .text
+            .trim(); // استخدام controller الصفحة الحالية
+        String patient = patientId ?? "";
+        File? fileToUpload =
+            files.isNotEmpty ? files[i] : null; // استخدام ملف الصفحة الحالية
+        if (fileToUpload == null && files.isNotEmpty) fileToUpload = files[i];
+        if (i == files.length - 1) {CommonLoader.showLoader();}
+
+        if (patientId == null) {
+          DisplaySnackBar.displaySnackBar("Please select patient");
+        } else {
+          _uploadDoctorDocument(
+              token, title, documentId, patient, notes, fileToUpload, i);
+        }
       }
     }
   }
 
   void _uploadDoctorDocument(String token, String title, String documentId,
-      String patient, String notes, File? fileToUpload) {
-    String details = documentDetailsControllers[currentPageIndex.value]
+      String patient, String notes, File? fileToUpload, int index) {
+    String details = documentDetailsControllers[index]
         .text
         .trim(); // استخدام controller الصفحة الحالية
-    String conclusion = conclusionControllers[currentPageIndex.value]
+    String conclusion = conclusionControllers[index]
         .text
         .trim(); // استخدام controller الصفحة الحالية
 
@@ -839,9 +508,13 @@ class NewDocumentController extends GetxController {
       fileToUpload!, // تم التأكد من وجود ملف في createDocuments
       notes,
     )
-      ..then((value) {
-        _handleDocumentUploadSuccess();
-      })
+      ..then(
+        (value) {
+          Get.back();
+          Get.back(result: "Call API");
+          DisplaySnackBar.displaySnackBar("Document uploaded successfully");
+        },
+      )
       ..onError((DioError error, stackTrace) {
         _handleDocumentUploadError(error);
         return DoctorDocumentsCRUDModel();
@@ -865,7 +538,7 @@ class NewDocumentController extends GetxController {
       fileToUpload!, // تم التأكد من وجود ملف في createDocuments
     )
       ..then((value) {
-        _handleDocumentUploadSuccess();
+        handleDocumentUploadSuccess();
       })
       ..onError((DioError error, stackTrace) {
         _handleDocumentUploadError(error);
@@ -873,7 +546,7 @@ class NewDocumentController extends GetxController {
       });
   }
 
-  void _handleDocumentUploadSuccess() {
+  void handleDocumentUploadSuccess() {
     Get.back();
     Get.back(result: "Call API");
     DisplaySnackBar.displaySnackBar("Document uploaded successfully");

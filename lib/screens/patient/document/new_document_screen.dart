@@ -24,6 +24,8 @@ import 'package:smart_searchable_dropdown/smart_searchable_dropdown.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../New Functions/Normal_Search.dart';
 import '../../../New Functions/Search_With_API.dart';
+import '../../../component/common_snackbar.dart';
+import '../../../controller/patient/document_controller/document_list_controller.dart';
 import '../../../model/patient/documents_model/document-parents/get-document-parents.dart';
 import '../../../model/patient/lab_tests/gat_lab_tests.dart';
 
@@ -36,13 +38,14 @@ class NewDocumentScreen extends StatefulWidget {
 
 class _NewDocumentScreenState extends State<NewDocumentScreen> {
   final NewDocumentController newDocumentController =
-  Get.put(NewDocumentController());
+      Get.put(NewDocumentController());
+  final DocumentController documentController = Get.put(DocumentController());
   final LabTestsDataModel labTestsDataModel = Get.put(LabTestsDataModel());
   final SearchDropItemsLocal searchableDropdownLocal = SearchDropItemsLocal();
   final GetDocumentParentsModel getDocumentParentsModel =
-  GetDocumentParentsModel();
+      GetDocumentParentsModel();
   final SearchDropItemsLocalState _searchDropItemsLocalState =
-  SearchDropItemsLocalState();
+      SearchDropItemsLocalState();
 
   @override
   Widget build(BuildContext context) {
@@ -74,13 +77,13 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                 child: Stack(
                   // استخدام Stack لعرض مؤشر الصفحات فوق PageView
                   alignment:
-                  Alignment.bottomCenter, // محاذاة مؤشر الصفحات إلى الأسفل
+                      Alignment.bottomCenter, // محاذاة مؤشر الصفحات إلى الأسفل
                   children: [
                     PageView.builder(
                       itemCount: newDocumentController.files.length == 0
                           ? 1
                           : newDocumentController.files
-                          .length, // عدد الصفحات = عدد الصور أو 1 إذا لم توجد صور
+                              .length, // عدد الصفحات = عدد الصور أو 1 إذا لم توجد صور
                       controller: newDocumentController
                           .pageController, // إضافة PageController
                       itemBuilder: (context, index) {
@@ -98,8 +101,8 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                   return null;
                                 },
                                 controller:
-                                newDocumentController.titleControllers[
-                                index], // استخدام قائمة controllers
+                                    newDocumentController.titleControllers[
+                                        index], // استخدام قائمة controllers
                               ),
                               SizedBox(height: height * 0.02),
                               CommonRequiredText(
@@ -109,83 +112,102 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               /// Document Type
                               PreferenceUtils.getBoolValue("isDoctor")
                                   ? Obx(() => CommonDropDown(
-                                value: newDocumentController
-                                    .selectedDocType.value ==
-                                    ''
-                                    ? null
-                                    : newDocumentController
-                                    .selectedDocType.value,
-                                onChange: (value) async {
-                                  newDocumentController.docId.value =
-                                  value!;
-                                  newDocumentController.docSubId!.value = '0';
-                                  newDocumentController.docSpecificId.value = '0';
-                                  newDocumentController.documentSubTypeTextController!.text = '';
-                                  newDocumentController.documentSpecificTypeTextController!.text = '';
-                                  newDocumentController
-                                      .gotDocumentSubTypeData
-                                      .value =
-                                  false; // أول حاجة خلي الـ loading true
-                                  await newDocumentController
-                                      .getDocumentSubType(id: newDocumentController.docId); // انتظر لحد ما تخلص
-                                  if (newDocumentController.docId.value ==
-                                      '1') {
-                                    newDocumentController.getLabTests();
-                                  }
-                                  print(newDocumentController.docId);
-                                },
-                                hintText: "Select Document Type",
-                                onCansle: () {
-                                  newDocumentController.selectedDocType.value = '';
-                                  print('sfkjkdafjsafjkahdkasmjjhdbblksahmga,jjjkhf,fh,jfhz,jd,jBjh');
-                                },
-                                dropdownItems: newDocumentController
-                                    .doctorDocumentsTypeModel!.data!
-                                    .map((items) {
-                                  return DropdownMenuItem(
-                                    value: items.id.toString(),
-                                    child: Text(items.name ?? ""),
-                                  );
-                                }).toList(),
-                              ))
+                                        value: newDocumentController
+                                                    .selectedDocType.value ==
+                                                ''
+                                            ? null
+                                            : newDocumentController
+                                                .selectedDocType.value,
+                                        onChange: (value) async {
+                                          newDocumentController.docId.value =
+                                              value!;
+                                          newDocumentController
+                                              .docSubId!.value = '0';
+                                          newDocumentController
+                                              .docSpecificId.value = '0';
+                                          newDocumentController
+                                              .documentSubTypeTextController!
+                                              .text = '';
+                                          newDocumentController
+                                              .documentSpecificTypeTextController!
+                                              .text = '';
+                                          newDocumentController
+                                                  .gotDocumentSubTypeData
+                                                  .value =
+                                              false; // أول حاجة خلي الـ loading true
+                                          await newDocumentController
+                                              .getDocumentSubType(
+                                                  id: newDocumentController
+                                                      .docId); // انتظر لحد ما تخلص
+                                          if (newDocumentController
+                                                  .docId.value ==
+                                              '1') {
+                                            newDocumentController.getLabTests();
+                                          }
+                                          print(newDocumentController.docId);
+                                        },
+                                        hintText: "Select Document Type",
+                                        onCansle: () {
+                                          newDocumentController
+                                              .selectedDocType.value = '';
+                                          print(
+                                              'sfkjkdafjsafjkahdkasmjjhdbblksahmga,jjjkhf,fh,jfhz,jd,jBjh');
+                                        },
+                                        dropdownItems: newDocumentController
+                                            .doctorDocumentsTypeModel!.data!
+                                            .map((items) {
+                                          return DropdownMenuItem(
+                                            value: items.id.toString(),
+                                            child: Text(items.name ?? ""),
+                                          );
+                                        }).toList(),
+                                      ))
                                   : Obx(
-                                    () => CommonDropDown(
-                                  value: newDocumentController
-                                      .selectedDocType.value ==
-                                      ''
-                                      ? null
-                                      : newDocumentController
-                                      .selectedDocType.value,
-                                  onChange: (value) async {
-                                    newDocumentController.docId.value =
-                                    value!;
-                                    newDocumentController.docSubId!.value = '0';
-                                    newDocumentController.docSpecificId.value = '0';
-                                    newDocumentController.documentSubTypeTextController!.text = '';
-                                    newDocumentController.documentSpecificTypeTextController!.text = '';
-                                    newDocumentController
-                                        .gotDocumentSubTypeData
-                                        .value =
-                                    false; // أول حاجة خلي الـ loading true
-                                    print(newDocumentController.docId);
-                                    await newDocumentController
-                                        .getDocumentSubType(id: newDocumentController.docId); // انتظر لحد ما تخلص
-                                  },
-                                  onCansle: () {
-                                    newDocumentController
-                                        .selectedDocType.value = '';
-                                  },
-                                  hintText: "Select Document Type",
-                                  dropdownItems: newDocumentController
-                                      .documentsTypeModel!.data!
-                                      .map((items) {
-                                    return DropdownMenuItem(
-                                      value: items.id.toString(),
-                                      child: Text(items.name ?? ""),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
+                                      () => CommonDropDown(
+                                        value: newDocumentController
+                                                    .selectedDocType.value ==
+                                                ''
+                                            ? null
+                                            : newDocumentController
+                                                .selectedDocType.value,
+                                        onChange: (value) async {
+                                          newDocumentController.docId.value =
+                                              value!;
+                                          newDocumentController
+                                              .docSubId!.value = '0';
+                                          newDocumentController
+                                              .docSpecificId.value = '0';
+                                          newDocumentController
+                                              .documentSubTypeTextController!
+                                              .text = '';
+                                          newDocumentController
+                                              .documentSpecificTypeTextController!
+                                              .text = '';
+                                          newDocumentController
+                                                  .gotDocumentSubTypeData
+                                                  .value =
+                                              false; // أول حاجة خلي الـ loading true
+                                          print(newDocumentController.docId);
+                                          await newDocumentController
+                                              .getDocumentSubType(
+                                                  id: newDocumentController
+                                                      .docId); // انتظر لحد ما تخلص
+                                        },
+                                        onCansle: () {
+                                          newDocumentController
+                                              .selectedDocType.value = '';
+                                        },
+                                        hintText: "Select Document Type",
+                                        dropdownItems: newDocumentController
+                                            .documentsTypeModel!.data!
+                                            .map((items) {
+                                          return DropdownMenuItem(
+                                            value: items.id.toString(),
+                                            child: Text(items.name ?? ""),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    ),
                               PreferenceUtils.getBoolValue("isDoctor")
                                   ? SizedBox(height: height * 0.02)
                                   : const SizedBox(),
@@ -196,7 +218,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                 controller: newDocumentController
                                     .documentSubTypeTextController,
                                 model:
-                                newDocumentController.documentsSubTypeModel,
+                                    newDocumentController.documentsSubTypeModel,
                                 gotData: newDocumentController
                                     .gotDocumentSubTypeData,
                                 id: newDocumentController.docSubId,
@@ -239,28 +261,27 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                 gotData: newDocumentController
                                     .gotDocumentSpicificTypeData,
                                 FunctionToCall: () async {
-                                  try{
+                                  try {
                                     await newDocumentController
                                         .getDocumentParents();
 
                                     final data = newDocumentController
                                         .getDocumentParentsModel.value?.Data;
                                     newDocumentController.docId!.value =
-                                    '${data?['document_type_id'] ?? '0'}';
+                                        '${data?['document_type_id'] ?? '0'}';
                                     newDocumentController.docSubId!.value =
-                                    '${data?['document_subtype_id'] ?? '0'}';
+                                        '${data?['document_subtype_id'] ?? '0'}';
 
                                     print('success my brotheeee');
                                     print(newDocumentController.docId.value);
-                                    print(newDocumentController.docSubId!.value);
+                                    print(
+                                        newDocumentController.docSubId!.value);
 
                                     newDocumentController
                                         .updateDropdownControllers();
-
-                                  }catch(e){
+                                  } catch (e) {
                                     print(e.toString());
                                   }
-
                                 },
                                 id: newDocumentController.docSpecificId,
                                 cancleDocumentField: () async {
@@ -268,24 +289,25 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                       .documentSpecificTypeTextController!
                                       .text = '';
                                   newDocumentController.docSpecificId!.value =
-                                  '0';
+                                      '0';
                                   newDocumentController
                                       .documentSubTypeTextController!.text = '';
-                                  newDocumentController.selectedDocSubType.value =
-                                  '';
+                                  newDocumentController
+                                      .selectedDocSubType.value = '';
                                   newDocumentController.selectedDocType.value =
-                                  '';
+                                      '';
                                   // إعادة تعيين القيم الأخرى أيضاً
                                   newDocumentController.docId.value = '0';
                                   newDocumentController.docSubId!.value = '0';
-                                  newDocumentController.getDocumentSubType(id: newDocumentController.docId);
+                                  newDocumentController.getDocumentSubType(
+                                      id: newDocumentController.docId);
                                 },
                               ),
 
                               ///lab and cat tests
                               SizedBox(height: height * 0.02),
                               Obx(
-                                    () {
+                                () {
                                   if (newDocumentController.gotlabTestsData ==
                                       false) {
                                     return Center(
@@ -293,121 +315,121 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                     );
                                   } else {
                                     return newDocumentController.docId.value ==
-                                        '1'
+                                            '1'
                                         ? Column(
-                                      crossAxisAlignment:
-                                      CrossAxisAlignment.start,
-                                      children: [
-                                        const Padding(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: Text(
-                                            "اختر التحاليل المطلوبة",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            border: Border.all(
-                                                color: Colors.blueAccent),
-                                            borderRadius:
-                                            BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 4,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                          child: Padding(
-                                            padding:
-                                            const EdgeInsets.all(8.0),
-                                            child: MultiSelectDialogField<
-                                                LabTestsDataModel>(
-                                              items: newDocumentController
-                                                  .labtestsModel!.data!
-                                                  .map((test) =>
-                                                  MultiSelectItem<
-                                                      LabTestsDataModel>(
-                                                      test,
-                                                      test.test_name ??
-                                                          'غير معروف'))
-                                                  .toList(),
-                                              title: const Text(
-                                                  "اختر التحاليل"),
-                                              searchable: true,
-                                              searchHint:
-                                              "ابحث عن تحليل...",
-                                              selectedColor: Colors.blue,
-                                              dialogHeight: 500,
-                                              buttonIcon: const Icon(
-                                                  Icons
-                                                      .medical_services_outlined,
-                                                  color: Colors.blue),
-                                              buttonText: const Text(
-                                                "اختر التحاليل",
-                                                style: TextStyle(
-                                                  fontSize: 15,
-                                                  color: Colors.black54,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                    vertical: 8.0),
+                                                child: Text(
+                                                  "اختر التحاليل المطلوبة",
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.black87,
+                                                  ),
                                                 ),
                                               ),
-                                              cancelText:
-                                              const Text("إلغاء"),
-                                              confirmText:
-                                              const Text("تم"),
-                                              initialValue:
-                                              newDocumentController
-                                                  .selectedLabTests,
-                                              onConfirm:
-                                                  (List<LabTestsDataModel>
-                                              selectedValues) {
-                                                print(
-                                                    "التحاليل المختارة:");
-                                                newDocumentController
-                                                    .selectedLabTests
-                                                    .value =
-                                                    selectedValues;
-                                                for (var test
-                                                in selectedValues) {
-                                                  print(
-                                                      "${test.id} - ${test.test_name}");
-                                                  // ممكن تهيئ خانة فاضية لكل تحليل
-                                                  newDocumentController
-                                                      .labTestInputs[
-                                                  test.id!] = '';
-                                                }
-                                                newDocumentController
-                                                    .gotlabTestsLoadnigData
-                                                    .value = true;
-                                              },
-                                              chipDisplay:
-                                              MultiSelectChipDisplay(
-                                                textStyle:
-                                                const TextStyle(
-                                                    color:
-                                                    Colors.white),
-                                                chipColor: Colors.blue,
-                                                onTap: (item) {
-                                                  // ممكن تضيف remove لو عندك متغير داخلي
-                                                  newDocumentController
-                                                      .selectedLabTests
-                                                      .remove(item);
-                                                  newDocumentController
-                                                      .labTestInputs
-                                                      .remove(item.id);
-                                                },
+                                              Container(
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  border: Border.all(
+                                                      color: Colors.blueAccent),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black12,
+                                                      blurRadius: 4,
+                                                      offset: Offset(0, 2),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: MultiSelectDialogField<
+                                                      LabTestsDataModel>(
+                                                    items: newDocumentController
+                                                        .labtestsModel!.data!
+                                                        .map((test) =>
+                                                            MultiSelectItem<
+                                                                    LabTestsDataModel>(
+                                                                test,
+                                                                test.test_name ??
+                                                                    'غير معروف'))
+                                                        .toList(),
+                                                    title: const Text(
+                                                        "اختر التحاليل"),
+                                                    searchable: true,
+                                                    searchHint:
+                                                        "ابحث عن تحليل...",
+                                                    selectedColor: Colors.blue,
+                                                    dialogHeight: 500,
+                                                    buttonIcon: const Icon(
+                                                        Icons
+                                                            .medical_services_outlined,
+                                                        color: Colors.blue),
+                                                    buttonText: const Text(
+                                                      "اختر التحاليل",
+                                                      style: TextStyle(
+                                                        fontSize: 15,
+                                                        color: Colors.black54,
+                                                      ),
+                                                    ),
+                                                    cancelText:
+                                                        const Text("إلغاء"),
+                                                    confirmText:
+                                                        const Text("تم"),
+                                                    initialValue:
+                                                        newDocumentController
+                                                            .selectedLabTests,
+                                                    onConfirm:
+                                                        (List<LabTestsDataModel>
+                                                            selectedValues) {
+                                                      print(
+                                                          "التحاليل المختارة:");
+                                                      newDocumentController
+                                                              .selectedLabTests
+                                                              .value =
+                                                          selectedValues;
+                                                      for (var test
+                                                          in selectedValues) {
+                                                        print(
+                                                            "${test.id} - ${test.test_name}");
+                                                        // ممكن تهيئ خانة فاضية لكل تحليل
+                                                        newDocumentController
+                                                                .labTestInputs[
+                                                            test.id!] = '';
+                                                      }
+                                                      newDocumentController
+                                                          .gotlabTestsLoadnigData
+                                                          .value = true;
+                                                    },
+                                                    chipDisplay:
+                                                        MultiSelectChipDisplay(
+                                                      textStyle:
+                                                          const TextStyle(
+                                                              color:
+                                                                  Colors.white),
+                                                      chipColor: Colors.blue,
+                                                      onTap: (item) {
+                                                        // ممكن تضيف remove لو عندك متغير داخلي
+                                                        newDocumentController
+                                                            .selectedLabTests
+                                                            .remove(item);
+                                                        newDocumentController
+                                                            .labTestInputs
+                                                            .remove(item.id);
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    )
+                                            ],
+                                          )
                                         : Container();
                                   }
                                 },
@@ -426,7 +448,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                           vertical: 6.0),
                                       child: Column(
                                         crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           // اسم التحليل
                                           Text(
@@ -441,8 +463,8 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                             children: labels.map((label) {
                                               return Padding(
                                                 padding:
-                                                const EdgeInsets.symmetric(
-                                                    vertical: 4.0),
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 4.0),
                                                 child: TextFormField(
                                                   onChanged: (value) {
                                                     // تخزين القيمة باستخدام مفتاح مميز: testId + label
@@ -451,10 +473,10 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                                   decoration: InputDecoration(
                                                     hintText: label,
                                                     border:
-                                                    const OutlineInputBorder(),
+                                                        const OutlineInputBorder(),
                                                     contentPadding:
-                                                    const EdgeInsets
-                                                        .symmetric(
+                                                        const EdgeInsets
+                                                            .symmetric(
                                                       vertical: 8.0,
                                                       horizontal: 10.0,
                                                     ),
@@ -474,7 +496,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               SizedBox(height: height * 0.02),
                               PreferenceUtils.getBoolValue("isDoctor")
                                   ? CommonRequiredText(
-                                  width: width, text: "Patient")
+                                      width: width, text: "Patient")
                                   : const SizedBox(),
 
                               SizedBox(height: height * 0.02),
@@ -482,13 +504,15 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               /// Patient
                               PreferenceUtils.getBoolValue("isDoctor")
                                   ? SearchableDropdown(
-                                'patients',
-                                newDocumentController
-                                    .doctorPatientsDocumentsModel,
-                                'ابحث عن مريض',
-                              )
+                                      'patients',
+                                      newDocumentController
+                                          .doctorPatientsDocumentsModel,
+                                      'ابحث عن مريض',
+                                    )
                                   : const SizedBox(),
                               SizedBox(height: height * 0.02),
+
+                              ///attachment
                               CommonRequiredText(
                                   width: width, text: StringUtils.attachment),
                               SizedBox(height: height * 0.02),
@@ -496,7 +520,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                 children: [
                                   InkWell(
                                     onTap: () async {
-                                      newDocumentController.multiple = false;
+                                      newDocumentController.multiple = true;
                                       newDocumentController.pickImage(
                                           index: index);
                                     },
@@ -512,20 +536,20 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                             width: 100,
                                             decoration: BoxDecoration(
                                               borderRadius:
-                                              BorderRadius.circular(10),
+                                                  BorderRadius.circular(10),
                                               color: Colors.white,
                                               image: !newDocumentController
-                                                  .showFiles[index].value
+                                                      .showFiles[index].value
                                                   ? const DecorationImage(
-                                                  image: AssetImage(
-                                                      "assets/icon/take_photo.png"),
-                                                  scale: 4)
+                                                      image: AssetImage(
+                                                          "assets/icon/take_photo.png"),
+                                                      scale: 4)
                                                   : DecorationImage(
-                                                image: FileImage(File(
-                                                    newDocumentController
-                                                        .files[index]
-                                                        .path)),
-                                              ),
+                                                      image: FileImage(File(
+                                                          newDocumentController
+                                                              .files[index]
+                                                              .path)),
+                                                    ),
                                             ));
                                       }),
                                     ),
@@ -549,6 +573,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               ),
                               SizedBox(height: height * 0.02),
                               SizedBox(height: height * 0.02),
+
                               ///details
                               CommonRequiredText(
                                   width: width, text: StringUtils.details),
@@ -567,11 +592,12 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                         .extractedTexts.value[index] = v;
                                   },
                                   controller: newDocumentController
-                                      .documentDetailsControllers[
-                                  index], // استخدام قائمة controllers
+                                          .documentDetailsControllers[
+                                      index], // استخدام قائمة controllers
                                 ),
                               ),
                               SizedBox(height: height * 0.02),
+
                               ///conclusion
                               CommonRequiredText(
                                   width: width, text: StringUtils.conclusion),
@@ -590,11 +616,12 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                         .extractedConclusion.value[index] = v;
                                   },
                                   controller: newDocumentController
-                                      .conclusionControllers[
-                                  index], // استخدام قائمة controllers
+                                          .conclusionControllers[
+                                      index], // استخدام قائمة controllers
                                 ),
                               ),
                               SizedBox(height: height * 0.02),
+
                               ///report
                               CommonRequiredText(
                                   width: width, text: StringUtils.reportDate),
@@ -613,10 +640,10 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
 
                                   if (pickedDate != null) {
                                     String formattedDate =
-                                    DateFormat('dd/MM/yyyy')
-                                        .format(pickedDate);
+                                        DateFormat('dd/MM/yyyy')
+                                            .format(pickedDate);
                                     newDocumentController
-                                        .reportDateControllers[index].text =
+                                            .reportDateControllers[index].text =
                                         formattedDate; // استخدام قائمة controllers
                                   }
                                 },
@@ -628,10 +655,11 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                 suffixIcon: Icon(Icons.date_range),
                                 keyBoardType: TextInputType.none,
                                 controller:
-                                newDocumentController.reportDateControllers[
-                                index], // استخدام قائمة controllers
+                                    newDocumentController.reportDateControllers[
+                                        index], // استخدام قائمة controllers
                               ),
                               SizedBox(height: height * 0.01),
+
                               ///labName
                               CommonRequiredText(
                                 width: width,
@@ -648,10 +676,11 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                       .text = v; // استخدام قائمة controllers
                                 },
                                 controller:
-                                newDocumentController.labNameControllers[
-                                index], // استخدام قائمة controllers
+                                    newDocumentController.labNameControllers[
+                                        index], // استخدام قائمة controllers
                               ),
                               SizedBox(height: height * 0.02),
+
                               ///notes
                               CommonRequiredText(
                                 width: width,
@@ -670,20 +699,22 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                       .text = v; // استخدام قائمة controllers
                                 },
                                 controller:
-                                newDocumentController.notesControllers[
-                                index], // استخدام قائمة controllers
+                                    newDocumentController.notesControllers[
+                                        index], // استخدام قائمة controllers
                               ),
                               SizedBox(height: height * 0.02),
+
+                              ///submit and cancle
                               Row(
                                 mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   CommonButton(
                                     textStyleConst:
-                                    TextStyleConst.mediumTextStyle(
-                                        ColorConst.whiteColor,
-                                        width * 0.05),
-                                    onTap: () {
+                                        TextStyleConst.mediumTextStyle(
+                                            ColorConst.whiteColor,
+                                            width * 0.05),
+                                    onTap: () async {
                                       newDocumentController.createDocuments();
                                     },
                                     color: ColorConst.blueColor,
@@ -693,9 +724,9 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                   ),
                                   CommonButton(
                                     textStyleConst:
-                                    TextStyleConst.mediumTextStyle(
-                                        ColorConst.hintGreyColor,
-                                        width * 0.05),
+                                        TextStyleConst.mediumTextStyle(
+                                            ColorConst.hintGreyColor,
+                                            width * 0.05),
                                     onTap: () {
                                       Get.back();
                                     },
@@ -716,9 +747,9 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                       // مؤشر الصفحات
                       bottom: 10.0,
                       child: Obx(() => Text(
-                        "${newDocumentController.currentPageIndex.value + 1}/${newDocumentController.files.length == 0 ? 1 : newDocumentController.files.length}", // عرض الصفحة الحالية / العدد الكلي
-                        style: TextStyle(color: Colors.grey),
-                      )),
+                            "${newDocumentController.currentPageIndex.value + 1}/${newDocumentController.files.length == 0 ? 1 : newDocumentController.files.length}", // عرض الصفحة الحالية / العدد الكلي
+                            style: TextStyle(color: Colors.grey),
+                          )),
                     ),
                   ],
                 ),
