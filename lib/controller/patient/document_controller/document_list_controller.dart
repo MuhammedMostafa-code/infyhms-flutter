@@ -241,7 +241,14 @@ class DocumentController extends GetxController {
         .deleteDocument(PreferenceUtils.getStringValue("token"), id)
       ..then((value) {
         Get.back();
-        DisplaySnackBar.displaySnackBar("Document deleted");
+        // DisplaySnackBar.displaySnackBar("Document deleted");
+        ScaffoldMessenger.of(Get.key.currentContext!).showSnackBar(
+          SnackBar(
+            content: Text('Document deleted'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.fixed,
+          ),
+        );
         getDocuments();
       })
       ..onError((DioError error, stackTrace) {
@@ -250,6 +257,7 @@ class DocumentController extends GetxController {
         return DocumentDeleteModel();
       });
   }
+
 
   void getDocuments() {
     gotData.value = false;
@@ -293,7 +301,14 @@ class DocumentController extends GetxController {
         PreferenceUtils.getStringValue("token"), id.toString())
       ..then((value) async {
         Get.back();
-        DisplaySnackBar.displaySnackBar("Document deleted");
+        // DisplaySnackBar.displaySnackBar("Document deleted");
+        ScaffoldMessenger.of(Get.key.currentContext!).showSnackBar(
+          SnackBar(
+            content: Text('Document deleted'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
         getDoctorDocuments();
       })
       ..onError((DioError error, stackTrace) {

@@ -40,7 +40,7 @@ class SearchDropItemsLocalState extends State<SearchDropItemsLocal> {
   void initState() {
     super.initState();
     widget.controller!.addListener(() {
-      setState(() {}); // لتحديث الواجهة عند تغيير النص
+      // setState(() {}); // لتحديث الواجهة عند تغيير النص
     });
   }
 

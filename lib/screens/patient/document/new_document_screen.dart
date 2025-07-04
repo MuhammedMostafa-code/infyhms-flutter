@@ -80,10 +80,9 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                       Alignment.bottomCenter, // محاذاة مؤشر الصفحات إلى الأسفل
                   children: [
                     PageView.builder(
-                      itemCount: newDocumentController.files.length == 0
+                      itemCount: newDocumentController.imageLenght == 0
                           ? 1
-                          : newDocumentController.files
-                              .length, // عدد الصفحات = عدد الصور أو 1 إذا لم توجد صور
+                          : newDocumentController.imageLenght.value, // عدد الصفحات = عدد الصور أو 1 إذا لم توجد صور
                       controller: newDocumentController
                           .pageController, // إضافة PageController
                       itemBuilder: (context, index) {
@@ -113,23 +112,29 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               PreferenceUtils.getBoolValue("isDoctor")
                                   ? Obx(() => CommonDropDown(
                                         value: newDocumentController
-                                                    .selectedDocType.value ==
+                                                    .selectedDocType[index]
+                                                    .value ==
                                                 ''
                                             ? null
                                             : newDocumentController
-                                                .selectedDocType.value,
+                                                .selectedDocType[index].value,
                                         onChange: (value) async {
-                                          newDocumentController.docId.value =
-                                              value!;
                                           newDocumentController
-                                              .docSubId!.value = '0';
+                                              .docId[index].value = value!;
                                           newDocumentController
-                                              .docSpecificId.value = '0';
+                                              .selectedDocType[index]
+                                              .value = value!;
                                           newDocumentController
-                                              .documentSubTypeTextController!
+                                              .docSubId[index].value = '0';
+                                          newDocumentController
+                                              .docSpecificId[index].value = '0';
+                                          newDocumentController
+                                              .documentSubTypeTextController[
+                                                  index]
                                               .text = '';
                                           newDocumentController
-                                              .documentSpecificTypeTextController!
+                                              .documentSpecificTypeTextController[
+                                                  index]
                                               .text = '';
                                           newDocumentController
                                                   .gotDocumentSubTypeData
@@ -137,10 +142,10 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                               false; // أول حاجة خلي الـ loading true
                                           await newDocumentController
                                               .getDocumentSubType(
-                                                  id: newDocumentController
-                                                      .docId); // انتظر لحد ما تخلص
+                                            index: index,
+                                          ); // انتظر لحد ما تخلص
                                           if (newDocumentController
-                                                  .docId.value ==
+                                                  .docId[index].value ==
                                               '1') {
                                             newDocumentController.getLabTests();
                                           }
@@ -149,7 +154,8 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                         hintText: "Select Document Type",
                                         onCansle: () {
                                           newDocumentController
-                                              .selectedDocType.value = '';
+                                              .selectedDocType[index]
+                                              .value = '';
                                           print(
                                               'sfkjkdafjsafjkahdkasmjjhdbblksahmga,jjjkhf,fh,jfhz,jd,jBjh');
                                         },
@@ -165,23 +171,26 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                   : Obx(
                                       () => CommonDropDown(
                                         value: newDocumentController
-                                                    .selectedDocType.value ==
+                                                    .selectedDocType[index]
+                                                    .value ==
                                                 ''
                                             ? null
                                             : newDocumentController
-                                                .selectedDocType.value,
+                                                .selectedDocType[index].value,
                                         onChange: (value) async {
-                                          newDocumentController.docId.value =
-                                              value!;
                                           newDocumentController
-                                              .docSubId!.value = '0';
+                                              .docId[index].value = value!;
                                           newDocumentController
-                                              .docSpecificId.value = '0';
+                                              .docSubId[index].value = '0';
                                           newDocumentController
-                                              .documentSubTypeTextController!
+                                              .docSpecificId[index].value = '0';
+                                          newDocumentController
+                                              .documentSubTypeTextController[
+                                                  index]
                                               .text = '';
                                           newDocumentController
-                                              .documentSpecificTypeTextController!
+                                              .documentSpecificTypeTextController[
+                                                  index]
                                               .text = '';
                                           newDocumentController
                                                   .gotDocumentSubTypeData
@@ -190,12 +199,13 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                           print(newDocumentController.docId);
                                           await newDocumentController
                                               .getDocumentSubType(
-                                                  id: newDocumentController
-                                                      .docId); // انتظر لحد ما تخلص
+                                                  index:
+                                                      index); // انتظر لحد ما تخلص
                                         },
                                         onCansle: () {
                                           newDocumentController
-                                              .selectedDocType.value = '';
+                                              .selectedDocType[index]
+                                              .value = '';
                                         },
                                         hintText: "Select Document Type",
                                         dropdownItems: newDocumentController
@@ -216,33 +226,35 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               SizedBox(height: height * 0.02),
                               SearchDropItemsLocal(
                                 controller: newDocumentController
-                                    .documentSubTypeTextController,
+                                    .documentSubTypeTextController[index],
                                 model:
                                     newDocumentController.documentsSubTypeModel,
                                 gotData: newDocumentController
                                     .gotDocumentSubTypeData,
-                                id: newDocumentController.docSubId,
+                                id: newDocumentController.docSubId[index],
                                 FunctionToCall: () async {
                                   newDocumentController
                                       .gotDocumentSpicificTypeData
                                       .value = false;
                                   await newDocumentController
-                                      .getDocumentSpicificType();
+                                      .getDocumentSpicificType(index: index);
                                   await newDocumentController
                                       .getDocumentParentsModel();
                                 },
                                 cancleDocumentField: () async {
                                   newDocumentController
-                                      .documentSubTypeTextController!.text = '';
-                                  newDocumentController
-                                      .documentSpecificTypeTextController!
+                                      .documentSubTypeTextController[index]
                                       .text = '';
-                                  newDocumentController.docSubId!.value = '0';
+                                  newDocumentController
+                                      .documentSpecificTypeTextController[index]
+                                      .text = '';
+                                  newDocumentController.docSubId[index].value =
+                                      '0';
                                   newDocumentController
                                       .gotDocumentSpicificTypeData
                                       .value = false;
-                                  newDocumentController
-                                      .getDocumentSpicificType();
+                                  newDocumentController.getDocumentSpicificType(
+                                      index: index);
                                 },
                               ),
 
@@ -255,7 +267,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
 
                               SearchDropItemsLocal(
                                 controller: newDocumentController
-                                    .documentSpecificTypeTextController,
+                                    .documentSpecificTypeTextController[index],
                                 model: newDocumentController
                                     .documentsSpecificTypeModel,
                                 gotData: newDocumentController
@@ -263,44 +275,50 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                 FunctionToCall: () async {
                                   try {
                                     await newDocumentController
-                                        .getDocumentParents();
+                                        .getDocumentParents(index: index);
 
                                     final data = newDocumentController
                                         .getDocumentParentsModel.value?.Data;
-                                    newDocumentController.docId!.value =
+                                    newDocumentController.docId[index].value =
                                         '${data?['document_type_id'] ?? '0'}';
-                                    newDocumentController.docSubId!.value =
+                                    newDocumentController
+                                            .docSubId[index].value =
                                         '${data?['document_subtype_id'] ?? '0'}';
 
                                     print('success my brotheeee');
-                                    print(newDocumentController.docId.value);
-                                    print(
-                                        newDocumentController.docSubId!.value);
+                                    print(newDocumentController
+                                        .docId[index].value);
+                                    print(newDocumentController
+                                        .docSubId[index].value);
 
                                     newDocumentController
-                                        .updateDropdownControllers();
+                                        .updateDropdownControllers(
+                                            index: index);
                                   } catch (e) {
                                     print(e.toString());
                                   }
                                 },
-                                id: newDocumentController.docSpecificId,
+                                id: newDocumentController.docSpecificId[index],
                                 cancleDocumentField: () async {
                                   newDocumentController
-                                      .documentSpecificTypeTextController!
+                                      .documentSpecificTypeTextController[index]
                                       .text = '';
-                                  newDocumentController.docSpecificId!.value =
-                                      '0';
                                   newDocumentController
-                                      .documentSubTypeTextController!.text = '';
+                                      .docSpecificId[index].value = '0';
                                   newDocumentController
-                                      .selectedDocSubType.value = '';
-                                  newDocumentController.selectedDocType.value =
-                                      '';
+                                      .documentSubTypeTextController[index]
+                                      .text = '';
+                                  newDocumentController
+                                      .selectedDocSubType[index].value = '';
+                                  newDocumentController
+                                      .selectedDocType[index].value = '';
                                   // إعادة تعيين القيم الأخرى أيضاً
-                                  newDocumentController.docId.value = '0';
-                                  newDocumentController.docSubId!.value = '0';
+                                  newDocumentController.docId[index].value =
+                                      '0';
+                                  newDocumentController.docSubId[index].value =
+                                      '0';
                                   newDocumentController.getDocumentSubType(
-                                      id: newDocumentController.docId);
+                                      index: index);
                                 },
                               ),
 
@@ -314,7 +332,8 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                       child: CircularProgressIndicator(),
                                     );
                                   } else {
-                                    return newDocumentController.docId.value ==
+                                    return newDocumentController
+                                                .docId[index].value ==
                                             '1'
                                         ? Column(
                                             crossAxisAlignment:
@@ -508,7 +527,8 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                                       newDocumentController
                                           .doctorPatientsDocumentsModel,
                                       'ابحث عن مريض',
-                                    )
+                                      newDocumentController.patientController,
+                                      index)
                                   : const SizedBox(),
                               SizedBox(height: height * 0.02),
 
@@ -518,54 +538,84 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                               SizedBox(height: height * 0.02),
                               Row(
                                 children: [
-                                  InkWell(
-                                    onTap: () async {
-                                      newDocumentController.multiple = true;
-                                      newDocumentController.pickImage(
-                                          index: index);
-                                    },
-                                    child: DottedBorder(
-                                      color: Colors.grey,
-                                      radius: const Radius.circular(10),
-                                      strokeWidth: 2,
-                                      borderType: BorderType.RRect,
-                                      dashPattern: const [4],
-                                      child: Obx(() {
-                                        return Container(
-                                            height: 100,
-                                            width: 100,
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              color: Colors.white,
-                                              image: !newDocumentController
-                                                      .showFiles[index].value
-                                                  ? const DecorationImage(
-                                                      image: AssetImage(
-                                                          "assets/icon/take_photo.png"),
-                                                      scale: 4)
-                                                  : DecorationImage(
-                                                      image: FileImage(File(
-                                                          newDocumentController
-                                                              .files[index]
-                                                              .path)),
-                                                    ),
-                                            ));
-                                      }),
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  Container(
-                                    child: IconButton(
-                                      onPressed: () {
-                                        newDocumentController.multiple = false;
+                                  Expanded(
+                                    child: InkWell(
+                                      onTap: () async {
+                                        newDocumentController.multiple = true;
                                         newDocumentController.pickImage(
                                             index: index);
                                       },
-                                      icon: Icon(
-                                        Icons.camera_alt_sharp,
-                                        size: 100,
-                                        color: ColorConst.blueColor,
+                                      child: DottedBorder(
+                                        color: Colors.grey,
+                                        radius: const Radius.circular(10),
+                                        strokeWidth: 2,
+                                        borderType: BorderType.RRect,
+                                        dashPattern: const [4],
+                                        child: Obx(() {
+                                          return Container(
+                                              height: 100,
+                                              width: 100,
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                color: Colors.white,
+                                                image: !newDocumentController
+                                                        .showFiles[index].value
+                                                    ? const DecorationImage(
+                                                        image: AssetImage(
+                                                            "assets/icon/take_photo.png"),
+                                                        scale: 4)
+                                                    : DecorationImage(
+                                                        image: FileImage(File(
+                                                            newDocumentController
+                                                                .files[index]!
+                                                                .path)),
+                                                      ),
+                                              ));
+                                        }),
+                                      ),
+                                    ),
+                                  ),
+                                  // Expanded(
+                                  //   child: IconButton(
+                                  //     onPressed: () {
+                                  //       newDocumentController.imageLenght.value++;
+                                  //       // تهيئة كل الـ Controllers للصفحة الجديدة
+                                  //       newDocumentController
+                                  //           .initializeControllersForNewImages(
+                                  //               newDocumentController
+                                  //                   .imageLenght.value);
+                                  //       if(newDocumentController.imageLenght.value > 0)
+                                  //       // newDocumentController.showFiles[index].value = true;
+                                  //
+                                  //       // الانتقال للصفحة الجديدة
+                                  //       Future.delayed(
+                                  //           Duration(milliseconds: 100), () {
+                                  //         newDocumentController.pageController
+                                  //             .animateToPage(
+                                  //           newDocumentController.imageLenght.value -
+                                  //               1,
+                                  //           duration: Duration(milliseconds: 300),
+                                  //           curve: Curves.easeInOut,
+                                  //         );
+                                  //       });
+                                  //     },
+                                  //     icon: Icon(Icons.add_a_photo),
+                                  //   ),
+                                  // ),
+                                  Expanded(
+                                    child: Container(
+                                      child: IconButton(
+                                        onPressed: () {
+                                          newDocumentController.multiple = false;
+                                          newDocumentController.pickImage(
+                                              index: index);
+                                        },
+                                        icon: Icon(
+                                          Icons.camera_alt_sharp,
+                                          size: 100,
+                                          color: ColorConst.blueColor,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -747,7 +797,7 @@ class _NewDocumentScreenState extends State<NewDocumentScreen> {
                       // مؤشر الصفحات
                       bottom: 10.0,
                       child: Obx(() => Text(
-                            "${newDocumentController.currentPageIndex.value + 1}/${newDocumentController.files.length == 0 ? 1 : newDocumentController.files.length}", // عرض الصفحة الحالية / العدد الكلي
+                            "${newDocumentController.currentPageIndex.value + 1}/${newDocumentController.imageLenght.value == 0 ? 1 : newDocumentController.imageLenght.value}", // عرض الصفحة الحالية / العدد الكلي
                             style: TextStyle(color: Colors.grey),
                           )),
                     ),

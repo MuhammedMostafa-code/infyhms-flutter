@@ -47,7 +47,7 @@ class _DocumentImageState extends State<DocumentImage> {
                     ? const DecorationImage(image: AssetImage("assets/icon/take_photo.png"), scale: 4)
                     : DecorationImage(
                   image: FileImage(
-                      newDocumentController.files[0] // Access the first file in the list
+                      newDocumentController.files[0]! // Access the first file in the list
                   ),
                   fit: BoxFit.cover, // Added BoxFit.cover to make image fit within the container
                 ),

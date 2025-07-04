@@ -14,7 +14,7 @@ class DisplaySnackBar {
         style: TextStyleConst.mediumTextStyle(Colors.white, 15),
       ),
       borderRadius: 5,
-      duration: Duration(seconds: sec ?? 3),
+      duration: Duration(seconds: sec ?? 2),
       margin: const EdgeInsets.all(10),
       dismissDirection: DismissDirection.horizontal,
     );

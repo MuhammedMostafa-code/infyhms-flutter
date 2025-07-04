@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
@@ -9,6 +10,7 @@ import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:infyhms_flutter/model/doctor/doctor_document_model/doctor_documents_model.dart';
 import 'package:infyhms_flutter/model/patient/lab_tests/gat_lab_tests.dart';
+import '../../../New Functions/Search_With_API.dart';
 import '../../../component/common_loader.dart';
 import '../../../component/common_snackbar.dart';
 import '../../../component/common_socket_exception.dart';
@@ -40,8 +42,15 @@ class NewDocumentController extends GetxController {
       <TextEditingController>[].obs;
   RxList<TextEditingController> labNameControllers =
       <TextEditingController>[].obs;
+  RxList<TextEditingController> documentSubTypeTextController =
+      <TextEditingController>[].obs;
+  RxList<TextEditingController> documentSpecificTypeTextController =
+      <TextEditingController>[].obs;
+  final RxList<TextEditingController> patientController =
+      <TextEditingController>[].obs;
 
   final DocumentController documentController = Get.put(DocumentController());
+
   DocumentsTypeModel? documentsTypeModel;
   Rx<DocumentsSubTypeModel?> documentsSubTypeModel =
       Rx<DocumentsSubTypeModel?>(null);
@@ -57,9 +66,10 @@ class NewDocumentController extends GetxController {
   var text = ''.obs;
   final entityExtractor =
       EntityExtractor(language: EntityExtractorLanguage.english);
-  RxString docId = '0'.obs;
-  RxString? docSubId = '0'.obs;
-  RxString docSpecificId = '0'.obs;
+
+  List<RxString> docId = <RxString>['0'.obs];
+  List<RxString> docSubId = <RxString>['0'.obs];
+  List<RxString> docSpecificId = <RxString>['0'.obs];
   ImagePicker imagePicker = ImagePicker();
   RxBool showFile = false.obs; // لن يتم استخدامها بشكل مباشر بعد الآن
   RxBool gotData = false.obs;
@@ -76,12 +86,12 @@ class NewDocumentController extends GetxController {
   RxMap<int, String> labTestInputs = <int, String>{}.obs;
   var extractedTexts = <String>[].obs; // قائمة نصوص لكل صفحة
   var extractedConclusion = <String>[].obs; // قائمة خلاصات لكل صفحة
-  String? patientId;
+  List<RxString> patientId = <RxString>[].obs;
   UserData? userData;
-  RxList<File> files = <File>[].obs;
+  RxList<File?> files = <File?>[].obs;
+  // RxList<File> files = <File>[File('/data/user/0/com.example.infyhms_flutter/cache/c442c818-2e5c-4f46-8615-f41574d2dcda/1000033342')].obs;
   RxList<RxBool> showFiles = <RxBool>[].obs;
   bool multiple = false;
-
   PageController pageController =
       PageController(initialPage: 0); // PageController للتحكم في PageView
   RxInt currentPageIndex = 0.obs; // لتتبع الصفحة الحالية
@@ -91,14 +101,17 @@ class NewDocumentController extends GetxController {
     super.onInit();
     if (PreferenceUtils.getBoolValue("isDoctor")) {
       getDoctorDocumentsType();
-      getDocumentSubType(id: docId);
-      getDocumentSpicificType();
+      getDocumentSubType(index: currentPageIndex.value);
+      getDocumentSpicificType(index: currentPageIndex.value);
       getLabTests();
+      getPatients(index: 0);
+
     } else {
       getDocumentTypes();
-      getDocumentSubType(id: docId);
-      getDocumentSpicificType();
+      getDocumentSubType(index: currentPageIndex.value + 1);
+      getDocumentSpicificType(index: currentPageIndex.value + 1);
       getLabTests();
+      getPatients(index: 0);
     }
     _initializeControllers(); // تهيئة controllers في البداية
     pageController.addListener(() {
@@ -115,62 +128,26 @@ class NewDocumentController extends GetxController {
     reportDateControllers.value = [TextEditingController()];
     conclusionControllers.value = [TextEditingController()];
     labNameControllers.value = [TextEditingController()];
+    documentSubTypeTextController.value = [TextEditingController()];
+    documentSpecificTypeTextController.value = [TextEditingController()];
+    patientController.value = [TextEditingController()];
+    patientId = ['0'.obs];
     extractedTexts.value = [""];
     extractedConclusion.value = [""];
     showFiles.value = [RxBool(false)]; // صفحة واحدة بدون صورة في البداية
     files.value = []; // لا توجد ملفات في البداية
   }
 
-  // Future<void> pickImage({int? index}) async {
-  //   try {
-  //     if (multiple == true) {
-  //       final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
-  //       if (pickedFiles != null) {
-  //         files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
-  //
-  //         // إعادة تهيئة القوائم لتناسب عدد الصور الجديدة
-  //         _initializeControllersForNewImages(files.length);
-  //
-  //         showFiles.value = List.generate(files.length, (_) => RxBool(true));
-  //
-  //         for (int i = 0; i < pickedFiles.length; i++) {
-  //           await textRecognition(pickedFiles[i], index: i).then(
-  //             (value) {
-  //               extractEntities(index: i);
-  //             },
-  //           );
-  //         }
-  //         if (files.isNotEmpty) {
-  //           pageController.animateToPage(
-  //               0, // الانتقال للصفحة الأولى بعد اختيار الصور
-  //               duration: Duration(milliseconds: 300),
-  //               curve: Curves.easeInOut);
-  //         }
-  //       }
-  //     } else {
-  //       final XFile? pickedFile =
-  //           await ImagePicker().pickImage(source: ImageSource.gallery);
-  //       if (pickedFile != null) {
-  //         files.value = [File(pickedFile.path)].obs;
-  //         _initializeControllersForNewImages(files.length);
-  //         showFiles.value = List.generate(files.length, (_) => RxBool(true));
-  //         await textRecognition(pickedFile, index: 0).then((value) {
-  //           extractEntities(index: 0);
-  //         });
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print("Error picking images: $e");
-  //   }
-  // }
+  RxInt imageLenght = 0.obs;
   Future<void> pickImage({int? index}) async {
     try {
       if (multiple == true) {
         final List<XFile>? pickedFiles = await ImagePicker().pickMultiImage();
         if (pickedFiles != null && pickedFiles.isNotEmpty) {
           files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
-          _initializeControllersForNewImages(files.length);
-          showFiles.value = List.generate(files.length, (_) => RxBool(true));
+          imageLenght.value = files.length;
+          initializeControllersForNewImages(imageLenght.value);
+          showFiles.value = List.generate(imageLenght.value, (_) => RxBool(true));
 
           for (int i = 0; i < pickedFiles.length; i++) {
             await textRecognition(pickedFiles[i], index: i).then(
@@ -191,8 +168,9 @@ class NewDocumentController extends GetxController {
             await ImagePicker().pickImage(source: ImageSource.gallery);
         if (pickedFile != null) {
           files.value = [File(pickedFile.path)].obs;
-          _initializeControllersForNewImages(files.length);
-          showFiles.value = List.generate(files.length, (_) => RxBool(true));
+          imageLenght.value = files.length;
+          initializeControllersForNewImages(imageLenght.value);
+          showFiles.value = List.generate(imageLenght.value, (_) => RxBool(true));
           await textRecognition(pickedFile, index: 0).then((value) {
             extractEntities(index: 0);
           });
@@ -205,9 +183,15 @@ class NewDocumentController extends GetxController {
     }
   }
 
-  void _initializeControllersForNewImages(int numberOfImages) {
+  List<RxString> selectedDocType = <RxString>[''.obs];
+  List<RxString> selectedDocSubType = <RxString>[''.obs];
+
+  void initializeControllersForNewImages(int numberOfImages) {
+    SearchableDropdownState searchableDropdownState =
+        Get.put(SearchableDropdownState());
     // إعادة تهيئة قوائم controllers و extractedTexts و extractedConclusion لتناسب عدد الصور الجديد
     if (numberOfImages != null) {
+      /// Controllers
       titleControllers.value =
           List.generate(numberOfImages, (_) => TextEditingController());
       notesControllers.value =
@@ -220,8 +204,28 @@ class NewDocumentController extends GetxController {
           List.generate(numberOfImages, (_) => TextEditingController());
       labNameControllers.value =
           List.generate(numberOfImages, (_) => TextEditingController());
+      documentSubTypeTextController.value =
+          List.generate(numberOfImages, (_) => TextEditingController());
+      documentSpecificTypeTextController.value =
+          List.generate(numberOfImages, (_) => TextEditingController());
+      // showFiles.value = List.generate(imageLenght.value, (_) => RxBool(false));
+      /// Documents IDS
+      docId = List.generate(numberOfImages, (_) => '0'.obs);
+      docSubId = List.generate(numberOfImages, (_) => '0'.obs);
+      docSpecificId = List.generate(numberOfImages, (_) => '0'.obs);
+
+      /// Parent IDS
+      selectedDocType = List.generate(numberOfImages, (_) => ''.obs);
+      selectedDocSubType = List.generate(numberOfImages, (_) => ''.obs);
+
+      /// Date And Time
       extractedTexts.value = List.generate(numberOfImages, (_) => "");
       extractedConclusion.value = List.generate(numberOfImages, (_) => "");
+
+      /// Patient
+      patientController.value =
+          List.generate(numberOfImages, (_) => TextEditingController());
+      patientId = List.generate(numberOfImages, (_) => '0'.obs);
     }
   }
 
@@ -301,11 +305,6 @@ class NewDocumentController extends GetxController {
   List<String> dateEntitiees = [];
   List<String> phoneEntitiees = [];
 
-  final TextEditingController? documentSubTypeTextController =
-      TextEditingController();
-  final TextEditingController? documentSpecificTypeTextController =
-      TextEditingController();
-
   Future<void> extractEntities({required int index}) async {
     final Map<String, List<String>> entityMap = {};
 
@@ -345,7 +344,7 @@ class NewDocumentController extends GetxController {
         documentsTypeModel = value;
         gotData.value = true;
         // getDocumentSpecificType();
-        getPatients();
+        // getPatients(index: patientIndex);
         update();
       })
       ..onError((DioError error, stackTrace) {
@@ -360,7 +359,7 @@ class NewDocumentController extends GetxController {
       ..then((value) {
         labtestsModel = value;
         gotlabTestsData.value = true;
-        getPatients();
+        // getPatients(index: patientIndex);
         print(labtestsModel!.data![0].json_labels);
         update();
       })
@@ -372,10 +371,10 @@ class NewDocumentController extends GetxController {
   }
 
   Future<DocumentsSubTypeModel> getDocumentSubType(
-      {required RxString? id}) async {
+      {required int? index}) async {
     try {
       final value = await StringUtils.client.getDocumentsSubType(
-          PreferenceUtils.getStringValue("token"), id!.value ?? '0');
+          PreferenceUtils.getStringValue("token"), docId[index!].value ?? '0');
       documentsSubTypeModel.value = value;
       gotDocumentSubTypeData.value = true;
       update();
@@ -389,9 +388,9 @@ class NewDocumentController extends GetxController {
     }
   }
 
-  Future getDocumentSpicificType() async {
+  Future getDocumentSpicificType({required int? index}) async {
     StringUtils.client.getDocumentsSpecificType(
-        PreferenceUtils.getStringValue("token"), docSubId?.value ?? '0')
+        PreferenceUtils.getStringValue("token"), docSubId[index!].value ?? '0')
       ..then((value) {
         documentsSpecificTypeModel.value = value;
         gotDocumentSpicificTypeData.value = true;
@@ -405,11 +404,11 @@ class NewDocumentController extends GetxController {
       });
   }
 
-  Future<void> getDocumentParents() async {
+  Future<void> getDocumentParents({required int? index}) async {
     try {
       final value = await StringUtils.client.getDocumentParents(
         PreferenceUtils.getStringValue("token"),
-        docSpecificId.value ?? '0',
+        docSpecificId[index!].value ?? '0',
       );
       getDocumentParentsModel.value = value;
       gotDocumentParentsData.value = true;
@@ -424,27 +423,26 @@ class NewDocumentController extends GetxController {
     }
   }
 
-  RxString selectedDocType = ''.obs;
-  RxString selectedDocSubType = ''.obs;
-
-  void updateDropdownControllers() async {
+  void updateDropdownControllers({required int? index}) async {
     // تحديث حقل Document Type
     final docTypeItem = doctorDocumentsTypeModel!.data!.firstWhere(
-        (item) => item.id.toString() == docId.value,
+        (item) => item.id.toString() == docId[index!].value,
         orElse: () => null!);
+    print('number1 ${docTypeItem.id}');
     if (docTypeItem != null) {
-      selectedDocType.value = docTypeItem.id.toString();
+      selectedDocType[index!].value = docTypeItem.id.toString();
+      print('number2 ${docTypeItem.id}');
     }
     gotDocumentSubTypeData.value = false;
-    await getDocumentSubType(id: docId).then(
+    await getDocumentSubType(index: index).then(
       (value) {
         print(value);
         final docSubTypeItem = documentsSubTypeModel.value?.data?.entries
-            .firstWhere((entry) => entry.key == docSubId!.value,
+            .firstWhere((entry) => entry.key == docSubId[index!].value,
                 orElse: () => null!);
         if (docSubTypeItem != null) {
-          selectedDocSubType.value = docSubTypeItem.key;
-          documentSubTypeTextController!.text = docSubTypeItem.value;
+          selectedDocSubType[index!].value = docSubTypeItem.key;
+          documentSubTypeTextController[index!].text = docSubTypeItem.value;
         }
       },
     );
@@ -452,143 +450,91 @@ class NewDocumentController extends GetxController {
 
   Future AddPatient() async {}
 
-  // void createDocuments() {
-  //   for (int i = 0; i < files.length; i++) {
-  //     // ... (باقي الكود كما هو، ولكن يمكن تعديله لاحقًا إذا كنت تريد معالجة البيانات لكل صفحة بشكل منفصل)
-  //     if (titleControllers[i].text.trim().isEmpty) {
-  //       // استخدام controller الصفحة الحالية
-  //       DisplaySnackBar.displaySnackBar("Please enter title");
-  //     } else if (docId == null) {
-  //       DisplaySnackBar.displaySnackBar("Please select document type");
-  //     } else if (files.isEmpty) {
-  //       DisplaySnackBar.displaySnackBar("Please attach file");
-  //     } else if (reportDateControllers[i].text.isEmpty) {
-  //       // استخدام controller الصفحة الحالية
-  //       DisplaySnackBar.displaySnackBar("Please enter ReportDate");
-  //     } else {
-  //       String token = PreferenceUtils.getStringValue("token");
-  //       String title = titleControllers[i]
-  //           .text
-  //           .trim(); // استخدام controller الصفحة الحالية
-  //       String documentId = docId.value ?? "";
-  //       String notes = notesControllers[i]
-  //           .text
-  //           .trim(); // استخدام controller الصفحة الحالية
-  //       String patient = patientId ?? "";
-  //       File? fileToUpload =
-  //           files.isNotEmpty ? files[i] : null; // استخدام ملف الصفحة الحالية
-  //       if (fileToUpload == null && files.isNotEmpty) fileToUpload = files[i];
-  //       if (i == files.length - 1) {CommonLoader.showLoader();}
-  //
-  //       if (patientId == null) {
-  //         DisplaySnackBar.displaySnackBar("Please select patient");
-  //       } else {
-  //         _uploadDoctorDocument(
-  //             token, title, documentId, patient, notes, fileToUpload, i);
-  //       }
-  //     }
-  //   }
-  // }
-  //
-  // void _uploadDoctorDocument(String token, String title, String documentId,
-  //     String patient, String notes, File? fileToUpload, int index)
-  // {
-  //   String details = documentDetailsControllers[index]
-  //       .text
-  //       .trim(); // استخدام controller الصفحة الحالية
-  //   String conclusion = conclusionControllers[index]
-  //       .text
-  //       .trim(); // استخدام controller الصفحة الحالية
-  //
-  //   StringUtils.client.createNewDoctorDocument(
-  //     token,
-  //     title,
-  //     details,
-  //     documentId,
-  //     patient,
-  //     fileToUpload!, // تم التأكد من وجود ملف في createDocuments
-  //     notes,
-  //   )
-  //     ..then(
-  //       (value) {
-  //         Get.back();
-  //         Get.back(result: "Call API");
-  //         DisplaySnackBar.displaySnackBar("Document uploaded successfully");
-  //       },
-  //     )
-  //     ..onError((DioError error, stackTrace) {
-  //       _handleDocumentUploadError(error);
-  //       return DoctorDocumentsCRUDModel();
-  //     });
-  // }
   Future<void> createDocuments() async {
-    if (files.isEmpty) {
-      DisplaySnackBar.displaySnackBar("Please attach file");
-      return;
-    }
-
-    if (docId == null) {
-      DisplaySnackBar.displaySnackBar("Please select document type");
-      return;
-    }
-
-    if (patientId == null) {
-      DisplaySnackBar.displaySnackBar("Please select patient");
-      return;
-    }
-
     final String token = PreferenceUtils.getStringValue("token");
-    final String documentId = docId.value ?? "";
-    final String patient = patientId ?? "";
 
-    CommonLoader.showLoader();
+    if (files.isEmpty) {
+      DisplaySnackBar.displaySnackBar("Please add at least one file");
+      return;
+    }
 
-    List<Future> uploadFutures = [];
-
+    // ✅ 1. التأكد من أن كل المستندات مكتملة
     for (int i = 0; i < files.length; i++) {
+      final String documentId = docId[i].value ?? "";
+      final String patient = patientId[i].value ?? "";
       final String title = titleControllers[i].text.trim();
       final String reportDate = reportDateControllers[i].text.trim();
 
+      if (files[i] == null) {
+        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please attach file");
+        return;
+      }
+
+      if (documentId.isEmpty || documentId == '0') {
+        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please select document type");
+        return;
+      }
+
+      print(patient[0]);
+      if (patientId[i].value == '0') {
+        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please select patient");
+        return;
+      }
+
       if (title.isEmpty) {
-        DisplaySnackBar.displaySnackBar("Please enter title for document ${i + 1}");
-        CommonLoader.hideLoader();
+        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please enter title");
         return;
       }
 
       if (reportDate.isEmpty) {
-        DisplaySnackBar.displaySnackBar("Please enter report date for document ${i + 1}");
-        CommonLoader.hideLoader();
+        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please enter report date");
         return;
       }
+    }
 
-      final File fileToUpload = files[i];
+    // ✅ 2. بدأ الرفع بعد التأكد إن كله تمام
+    CommonLoader.showLoader();
+
+    for (int i = 0; i < files.length; i++) {
+      final File fileToUpload = files[i]!;
+      final String documentId = docId[i].value ?? "";
+      final String patient = patientId[i].value ?? "";
+      final String title = titleControllers[i].text.trim();
+      final String reportDate = reportDateControllers[i].text.trim();
       final String notes = notesControllers[i].text.trim();
       final String details = documentDetailsControllers[i].text.trim();
       final String conclusion = conclusionControllers[i].text.trim();
 
-      // إضافة الـ future لقائمة الانتظار
-      uploadFutures.add(_uploadDoctorDocument(
-        token: token,
-        title: title,
-        documentId: documentId,
-        patient: patient,
-        notes: notes,
-        file: fileToUpload,
-        details: details,
-        conclusion: conclusion,
-      ));
+      try {
+        await _uploadDoctorDocument(
+          token: token,
+          title: title,
+          documentId: documentId,
+          patient: patient,
+          notes: notes,
+          file: fileToUpload,
+          details: details,
+          conclusion: conclusion,
+        );
+      } catch (e) {
+        CommonLoader.hideLoader();
+        DisplaySnackBar.displaySnackBar("Error uploading document ${i + 1}");
+        return;
+      }
     }
 
-    try {
-      await Future.wait(uploadFutures);
-      CommonLoader.hideLoader();
-      Get.back(result: "Call API"); // <-- دي بس، تكفي
-      DisplaySnackBar.displaySnackBar("All documents uploaded successfully");
-    } catch (e) {
-      CommonLoader.hideLoader();
-      // الخطأ اتعالج جوه uploadDoctorDocument
-    }
+    CommonLoader.hideLoader();
+    Get.back(result: "Call API");
+
+    ScaffoldMessenger.of(Get.key.currentContext!).showSnackBar(
+      SnackBar(
+        content: Text('All documents uploaded successfully'),
+        backgroundColor: Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
+
   Future<void> _uploadDoctorDocument({
     required String token,
     required String title,
@@ -664,36 +610,39 @@ class NewDocumentController extends GetxController {
         .doctorDocumentType(PreferenceUtils.getStringValue("token"))
       ..then((value) {
         doctorDocumentsTypeModel = value;
-        getPatients();
+        // getPatients(index: patientIndex);
 
         // getDocumentSpecificType();
       })
       ..onError((DioError error, stackTrace) {
-        getPatients();
+        // getPatients(index: patientIndex);
         CheckSocketException.checkSocketException(error);
         return DoctorDocumentsTypeModel();
       });
   }
 
-  Future getPatients() async {
+  Future getPatients({required int index}) async {
     StringUtils.client
         .doctorPatientsDocument(PreferenceUtils.getStringValue("token"))
       ..then((value) {
         doctorPatientsDocumentsModel = value;
-        if (PreferenceUtils.getBoolValue("isDoctor") == false) {
-          final targetPatient = value.data!.firstWhere(
-            (element) => element.user_id == userData!.id,
-            orElse: () => null!,
-          );
-
-          if (targetPatient != null) {
-            // خزّن الـ id في متغير
-            patientId = targetPatient.id.toString(); // RxString مثلاً
-            print("Patient ID: ${patientId}");
-          } else {
-            print("No matching patient found.");
-          }
-        }
+        // print(patientId[index].value);
+        // if (PreferenceUtils.getBoolValue("isDoctor") == false) {
+        //   final targetPatient = value.data!.firstWhere
+        //     (
+        //     (element) => element.user_id == userData!.id,
+        //     orElse: () => null!,
+        //   );
+        //
+        //   if (targetPatient != null) {
+        //     // خزّن الـ id في متغير
+        //     patientId[index].value =
+        //         targetPatient.id.toString(); // RxString مثلاً
+        //     print("Patient ID: ${patientId}");
+        //   } else {
+        //     print("No matching patient found.");
+        //   }
+        // }
 
         gotData.value = true;
       })
