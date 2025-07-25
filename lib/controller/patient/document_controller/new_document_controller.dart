@@ -105,7 +105,6 @@ class NewDocumentController extends GetxController {
       getDocumentSpicificType(index: currentPageIndex.value);
       getLabTests();
       getPatients(index: 0);
-
     } else {
       getDocumentTypes();
       getDocumentSubType(index: currentPageIndex.value + 1);
@@ -147,7 +146,8 @@ class NewDocumentController extends GetxController {
           files.value = pickedFiles.map((xfile) => File(xfile.path)).toList();
           imageLenght.value = files.length;
           initializeControllersForNewImages(imageLenght.value);
-          showFiles.value = List.generate(imageLenght.value, (_) => RxBool(true));
+          showFiles.value =
+              List.generate(imageLenght.value, (_) => RxBool(true));
 
           for (int i = 0; i < pickedFiles.length; i++) {
             await textRecognition(pickedFiles[i], index: i).then(
@@ -170,7 +170,8 @@ class NewDocumentController extends GetxController {
           files.value = [File(pickedFile.path)].obs;
           imageLenght.value = files.length;
           initializeControllersForNewImages(imageLenght.value);
-          showFiles.value = List.generate(imageLenght.value, (_) => RxBool(true));
+          showFiles.value =
+              List.generate(imageLenght.value, (_) => RxBool(true));
           await textRecognition(pickedFile, index: 0).then((value) {
             extractEntities(index: 0);
           });
@@ -466,28 +467,33 @@ class NewDocumentController extends GetxController {
       final String reportDate = reportDateControllers[i].text.trim();
 
       if (files[i] == null) {
-        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please attach file");
+        DisplaySnackBar.displaySnackBar(
+            "Document ${i + 1}: Please attach file");
         return;
       }
 
       if (documentId.isEmpty || documentId == '0') {
-        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please select document type");
+        DisplaySnackBar.displaySnackBar(
+            "Document ${i + 1}: Please select document type");
         return;
       }
 
       print(patient[0]);
       if (patientId[i].value == '0') {
-        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please select patient");
+        DisplaySnackBar.displaySnackBar(
+            "Document ${i + 1}: Please select patient");
         return;
       }
 
       if (title.isEmpty) {
-        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please enter title");
+        DisplaySnackBar.displaySnackBar(
+            "Document ${i + 1}: Please enter title");
         return;
       }
 
       if (reportDate.isEmpty) {
-        DisplaySnackBar.displaySnackBar("Document ${i + 1}: Please enter report date");
+        DisplaySnackBar.displaySnackBar(
+            "Document ${i + 1}: Please enter report date");
         return;
       }
     }

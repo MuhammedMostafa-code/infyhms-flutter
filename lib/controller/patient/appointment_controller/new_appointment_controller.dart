@@ -12,10 +12,14 @@ import 'package:infyhms_flutter/utils/preference_utils.dart';
 import 'package:infyhms_flutter/utils/string_utils.dart';
 import 'package:infyhms_flutter/utils/variable_utils.dart';
 
+import '../document_controller/new_document_controller.dart';
+
 class NewAppointmentController extends GetxController {
   final TextEditingController doctorController = TextEditingController();
   final TextEditingController dateController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
+
+  var newDocumentController = Get.put(NewDocumentController());
 
   DoctorDepartmentModel? doctorDepartmentModel;
   SlotBookingModel? slotBookingModel;
@@ -34,11 +38,43 @@ class NewAppointmentController extends GetxController {
   bool isSelectDoctorDepartment = false;
   bool isSelectDoctor = false;
 
+  var selectedService = 'Medical Check'.obs;
+  var selectedVisit = ''.obs;
+  var discountPercent = 0.0.obs;
+
+  final double subTotal = 200.0;
+
+  // 👇 كل خدمة لها قائمة مختلفة
+  final Map<String, List<String>> serviceVisitOptions = {
+    'Packages': ['package_visit', 'bonus_visit'],
+    'Solo Service': ['solo_check', 'quick_check'],
+    'Medical Check': ['new_visit', 'follow_up'],
+  };
+
+  // 👇 دي اللي هنستخدمها في Dropdown
+  RxList<String> selectedVisitList = <String>[].obs;
+
+  double get discountAmount => (subTotal * (discountPercent.value / 100));
+  double get totalAmount => subTotal - discountAmount;
+
+  void updateVisitList() {
+    final list = serviceVisitOptions[selectedService.value] ?? [];
+    selectedVisitList.value = list;
+    if (list.isNotEmpty) {
+      selectedVisit.value = list.first;
+    } else {
+      selectedVisit.value = '';
+    }
+  }
+
   @override
   void onInit() {
     // TODO: implement onInit
     super.onInit();
-    StringUtils.client.getDoctorDepartment(PreferenceUtils.getStringValue("token"))
+    updateVisitList(); // أول مرة
+    ever(selectedService, (_) => updateVisitList());
+    StringUtils.client
+        .getDoctorDepartment(PreferenceUtils.getStringValue("token"))
       ..then((value) {
         doctorDepartmentModel = value;
         update();
@@ -73,7 +109,8 @@ class NewAppointmentController extends GetxController {
     );
     if (picked != null) {
       oldValue = picked;
-      selectedDate = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+      selectedDate =
+          "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       dateController.text = selectedDate!;
     }
   }
@@ -82,7 +119,10 @@ class NewAppointmentController extends GetxController {
     if (isSelectDoctor) {
       selectDate(context).then((value) async {
         if (selectedDate != null) {
-          await StringUtils.client.getBookingSlotDate(PreferenceUtils.getStringValue("token"), selectedDate!, doctorId).then((value) {
+          await StringUtils.client
+              .getBookingSlotDate(PreferenceUtils.getStringValue("token"),
+                  selectedDate!, doctorId)
+              .then((value) {
             slotBookingModel = value;
             isSelectDate = true;
             if (slotBookingModel!.data!.bookingSlotArr!.isNotEmpty) {
@@ -114,7 +154,8 @@ class NewAppointmentController extends GetxController {
         doctorId,
         selectedDate!,
         selectedTime!,
-        VariableUtils.patientId.value,
+        // VariableUtils.patientId.value,
+        newDocumentController.patientId[0].value,
       )
         ..then((value) {
           createAppointmentModel = value;
